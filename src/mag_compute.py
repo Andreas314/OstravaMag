@@ -101,7 +101,6 @@ class mag_compute:
     def _magnon_energies(self):
         q0 = self.gamma
         J0 = self.Jq[q0]
-        print(J0)
         Na = len(J0)
         Nq = self.path_len
         n = np.sign(self.magmoms[:, 2])
