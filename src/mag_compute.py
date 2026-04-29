@@ -3,25 +3,39 @@ import numpy as np
 import matplotlib.pyplot as plt
 class mag_compute:
     def __init__(self, arguments):
+        
+        ### variables from the command line
         self.max_R = arguments.max_R
         self.data_name = arguments.name
         self.data_type = arguments.type
         self.compute_magnon_bands = arguments.compute_magnon_bands
         self.kpath_name = arguments.kpath_name
+        ###
+
+        ### variables related to the kpath
         self.kpath = np.array([])
         self.letters = []
         self.letters_position = [0]
         self.kpath_x = np.array([])
-        self.Jr = np.array([])
-        self.cell = np.array([])
-        self.magmoms = np.array([])
-        self.Jq = np.array([])
-        self.reciprocal = np.array([])
         self.gamma = 0
         self.path_len = 0
-        self.magnon_energies = np.array([])
+        ###
+        
+        ### variables loaded from the input file
+        self.Jr = np.array([])
+        self.cell = np.array([]) #cell vectors
+        self.magmoms = np.array([]) #magnetic moments inside the cell (only > 0)
+        ###
+        
+        ## reciprocal space variables
+        self.Jq = np.array([]) #Js in reciprocal space
+        self.reciprocal = np.array([]) #basis of the reciprocal sapce
+        ##
+
+        self.magnon_energies = np.array([]) #magnon bands
 
     def _compute_reciprocal(self):
+        #function to compute the reciprocal basis
         a1, a2, a3 = self.cell
         volume = np.dot(a1, np.cross(a2, a3))
     
@@ -34,6 +48,8 @@ class mag_compute:
         self.reciprocal = np.vstack((b1, b2, b3))
 
     def _make_path(self, num_points, kpoints):
+        #make the kpath from the input
+        #also handles the thing about having the gamma point inside the path
         steps = len(kpoints)
         self.path_len = round((num_points + 1) * steps / 2 )
         self.kpath = np.zeros(shape = (self.path_len, 3), dtype = float)
@@ -43,10 +59,13 @@ class mag_compute:
             end = kpoints[ii + 1];
             diff = (end - begin) / num_points
             for jj in range(num_points + 1):
+                #handle the lenght scale of the x axis
                 self.kpath_x = np.append(self.kpath_x, last)
                 last += np.dot(diff, diff)
+                #handle the actual path
                 index = int(ii / 2 * (num_points+1) + jj)
                 self.kpath[index] = begin + diff * jj
+            #positions of the ticks
             self.letters_position.append(self.kpath_x[-1])
         #test of gamma point is inside the kpath
         if np.any(np.all(np.isin(self.kpath, np.array([0, 0, 0])), axis = 1)):
@@ -54,10 +73,11 @@ class mag_compute:
             self.gamma = np.where(mask)[0][0]
         #if not, add gamma point to the end of the kpath
         else:
-            self.gamma = round(num_points * steps / 2 )
+            self.gamma = round((num_points + 1) * steps / 2)
             self.kpath = np.vstack((self.kpath, np.array([0,0,0])))
 
     def read(self):
+        #reads from all the files
         self.Jr, self.cell, self.magmoms = read_data(self.data_type, self.data_name, self.max_R)
         if self.compute_magnon_bands:
             num_points, kpoints, self.letters = read_kpath(self.kpath_name)
@@ -68,16 +88,20 @@ class mag_compute:
         self.Jq = np.zeros(shape = (len(self.kpath), np.shape(self.Jr)[-1], np.shape(self.Jr)[-1]), dtype = complex)
         for q_ind in range(len(self.kpath)):
             q = self.kpath[q_ind]
+            #computet he reciprocal vector for the phase calculation
             q_ = np.dot(q, self.reciprocal)
             for Rx in range(-self.max_R[0], self.max_R[0] + 1):
                 for Ry in range(-self.max_R[1], self.max_R[1] + 1):
                     for Rz in range(-self.max_R[2], self.max_R[2] + 1):
+                        #computet he real space difference vector for the phase calculation
                         R_ = np.dot(np.array([Rx, Ry, Rz]), self.cell)  
+                        #shift the indices so that they start in zero
                         self.Jq[q_ind] += self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] * np.exp(1j * np.dot(q_, R_))
     
     def _magnon_energies(self):
         q0 = self.gamma
         J0 = self.Jq[q0]
+        print(J0)
         Na = len(J0)
         Nq = self.path_len
         n = np.sign(self.magmoms[:, 2])
