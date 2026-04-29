@@ -9,6 +9,9 @@ class mag_compute:
         self.compute_magnon_bands = arguments.compute_magnon_bands
         self.kpath_name = arguments.kpath_name
         self.kpath = np.array([])
+        self.letters = []
+        self.letters_position = [0]
+        self.kpath_x = np.array([])
         self.Jr = np.array([])
         self.cell = np.array([])
         self.magmoms = np.array([])
@@ -34,13 +37,17 @@ class mag_compute:
         steps = len(kpoints)
         self.path_len = round((num_points + 1) * steps / 2 )
         self.kpath = np.zeros(shape = (self.path_len, 3), dtype = float)
+        last = 0
         for ii in range(0, steps, 2):
             begin = kpoints[ii]
             end = kpoints[ii + 1];
             diff = (end - begin) / num_points
             for jj in range(num_points + 1):
+                self.kpath_x = np.append(self.kpath_x, last)
+                last += np.dot(diff, diff)
                 index = int(ii / 2 * (num_points+1) + jj)
                 self.kpath[index] = begin + diff * jj
+            self.letters_position.append(self.kpath_x[-1])
         #test of gamma point is inside the kpath
         if np.any(np.all(np.isin(self.kpath, np.array([0, 0, 0])), axis = 1)):
             mask = np.all(self.kpath == [0, 0, 0], axis=1)
@@ -53,7 +60,7 @@ class mag_compute:
     def read(self):
         self.Jr, self.cell, self.magmoms = read_data(self.data_type, self.data_name, self.max_R)
         if self.compute_magnon_bands:
-            num_points, kpoints = read_kpath(self.kpath_name)
+            num_points, kpoints, self.letters = read_kpath(self.kpath_name)
             self._make_path(num_points, kpoints)
 
     def _fourier_transform_kpath(self):
@@ -129,9 +136,9 @@ class mag_compute:
         if self.compute_magnon_bands:
             self._fourier_transform_kpath()
             self._magnon_energies()
-            x = np.linspace(0, 1, self.path_len)
+            plt.xticks(self.letters_position, self.letters)
             for band in range(self.magnon_energies.shape[1]):
-                plt.plot(x, np.abs(self.magnon_energies[:, band]))
+                plt.plot(self.kpath_x, np.abs(self.magnon_energies[:, band]))
             plt.gca().set_ylim(bottom=0)
             plt.savefig("bandstructure.png", dpi=300)
         
