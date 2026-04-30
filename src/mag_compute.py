@@ -5,11 +5,21 @@ class mag_compute:
     def __init__(self, arguments):
         
         ### variables from the command line
+        ##switches
+        self.compute_magnon_bands = arguments.compute_magnon_bands
+        self.compute_magnon_dos = arguments.compute_magnon_dos
+        ##
+        ##others
         self.max_R = arguments.max_R
         self.data_name = arguments.name
         self.data_type = arguments.type
-        self.compute_magnon_bands = arguments.compute_magnon_bands
         self.kpath_name = arguments.kpath_name
+        self.max_E = arguments.max_E
+        self.min_E = arguments.min_E
+        self.n_points = arguments.n_points
+        self.smearing = arguments.smearing
+        self.k_grid_division = arguments.k_grid
+        ##
         ###
 
         ### variables related to the kpath
@@ -28,12 +38,16 @@ class mag_compute:
         ###
         
         ## reciprocal space variables
-        self.Jq = np.array([]) #Js in reciprocal space
+        self.Jq = np.array([]) #Js in reciprocal space for kpath
+        self.Jq_grid = np.array([]) #Js in reciprocal space for kgrid
         self.reciprocal = np.array([]) #basis of the reciprocal sapce
+        self.k_grid = np.array([]) #actual full gdrid
         ##
 
         self.magnon_energies = np.array([]) #magnon bands
-
+        self.dos_E = np.linspace(self.min_E, self.max_E, self.n_points)
+        self.magnon_dos = np.zeros(shape = (len(self.dos_E)), dtype = float) #magnon bands
+    
     def _compute_reciprocal(self):
         #function to compute the reciprocal basis
         a1, a2, a3 = self.cell
@@ -46,6 +60,19 @@ class mag_compute:
         b2 = 2 * np.pi * np.cross(a3, a1) / volume
         b3 = 2 * np.pi * np.cross(a1, a2) / volume
         self.reciprocal = np.vstack((b1, b2, b3))
+    
+    def _make_grid(self):
+        #generate gamma centred kmesh
+        self.k_grid = np.zeros( shape = (np.prod(np.array(self.k_grid_division)), 3), dtype = float)
+        ii = 0
+        for kx in range(self.k_grid_division[0]):
+            vx = kx / self.k_grid_division[0] * self.reciprocal[0]
+            for ky in range(self.k_grid_division[1]):
+                vy = ky / self.k_grid_division[1] * self.reciprocal[1]
+                for kz in range(self.k_grid_division[2]):
+                    vz = kz / self.k_grid_division[2] * self.reciprocal[2]
+                    self.k_grid[ii] = vx + vy + vz
+                    ii += 1
 
     def _make_path(self, num_points, kpoints):
         #make the kpath from the input
@@ -83,11 +110,21 @@ class mag_compute:
             num_points, kpoints, self.letters = read_kpath(self.kpath_name)
             self._make_path(num_points, kpoints)
 
-    def _fourier_transform_kpath(self):
-        self._compute_reciprocal()
-        self.Jq = np.zeros(shape = (len(self.kpath), np.shape(self.Jr)[-1], np.shape(self.Jr)[-1]), dtype = complex)
-        for q_ind in range(len(self.kpath)):
-            q = self.kpath[q_ind]
+    def _fourier_transform(self, _type):
+        if _type == "path":
+            self.Jq = np.zeros(shape = (len(self.kpath), np.shape(self.Jr)[-1], np.shape(self.Jr)[-1]), dtype = complex)
+            k_size = len(self.kpath)
+        elif _type == "grid":
+            self.Jq_grid = np.zeros(shape = (len(self.k_grid), np.shape(self.Jr)[-1], np.shape(self.Jr)[-1]), dtype = complex)
+            k_size = len(self.k_grid)
+        else:
+            return 0
+        for q_ind in range(k_size):
+            q = 0
+            if _type == "path":
+                q = self.kpath[q_ind]
+            else:
+                q = self.k_grid[q_ind]
             #computet he reciprocal vector for the phase calculation
             q_ = np.dot(q, self.reciprocal)
             for Rx in range(-self.max_R[0], self.max_R[0] + 1):
@@ -96,13 +133,20 @@ class mag_compute:
                         #computet he real space difference vector for the phase calculation
                         R_ = np.dot(np.array([Rx, Ry, Rz]), self.cell)  
                         #shift the indices so that they start in zero
-                        self.Jq[q_ind] += self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] * np.exp(1j * np.dot(q_, R_))
+                        if _type == "path":
+                            self.Jq[q_ind] += self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] * np.exp(1j * np.dot(q_, R_))
+                        else:
+                            self.Jq_grid[q_ind] += self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] * np.exp(1j * np.dot(q_, R_))
     
-    def _magnon_energies(self):
-        q0 = self.gamma
+    def _magnon_energies(self, _type):
+        if _type == "path":
+            q0 = self.gamma
+            Nq = self.path_len
+        if _type == "grid":
+            q0 = 0
+            Nq = np.shape(self.k_grid)[0]
         J0 = self.Jq[q0]
         Na = len(J0)
-        Nq = self.path_len
         n = np.sign(self.magmoms[:, 2])
         S = np.abs(self.magmoms[:, 2])
     
@@ -128,13 +172,20 @@ class mag_compute:
         for iq in range(Nq):
             for a in range(Na):
                 for b in range(Na):
-                    Aq[iq, a, b] += 2 * ((KroneckerDelta(a,b) * sJ0[a] / S[a]) 
-                            - (KroneckerDelta(n[a],n[b]) * self.Jq[iq,a,b] / np.sqrt(S[a] * S[b])))
+                    if _type == "path":
+                        Aq[iq, a, b] += 2 * ((KroneckerDelta(a,b) * sJ0[a] / S[a]) 
+                              - (KroneckerDelta(n[a],n[b]) * self.Jq[iq,a,b] / np.sqrt(S[a] * S[b])))
+                    else:
+                        Aq[iq, a, b] += 2 * ((KroneckerDelta(a,b) * sJ0[a] / S[a]) 
+                              - (KroneckerDelta(n[a],n[b]) * self.Jq_grid[iq,a,b] / np.sqrt(S[a] * S[b])))
         Bq = np.zeros((Nq, Na, Na), complex)
         for iq in range(Nq):
             for a in range(Na):
                 for b in range(Na):
-                    Bq[iq, a, b] -= 2 * (KroneckerDelta(n[a],-n[b]) * self.Jq[iq,a,b] / np.sqrt(S[a] * S[b]))            
+                    if _type == "path":
+                        Bq[iq, a, b] -= 2* (KroneckerDelta(n[a],-n[b]) * self.Jq[iq,a,b] / np.sqrt(S[a] * S[b]))
+                    else:
+                        Bq[iq, a, b] -= 2* (KroneckerDelta(n[a],-n[b]) * self.Jq_grid[iq,a,b] / np.sqrt(S[a] * S[b]))
         Hq = np.zeros((Nq, 2 * Na, 2 * Na), complex)
         for iq in range(Nq):
             for a in range(2 * Na):
@@ -154,14 +205,39 @@ class mag_compute:
             #self.magnon_energies[i] = E_qn[i][np.real(E_qn[i]) >= -1e-2]
             self.magnon_energies[i] = E_qn[i][:]
         self.magnon_energies = np.sort(self.magnon_energies, axis=1) * 1000
+    
+    def _compute_dos(self):
+        num_kpoints = np.shape(self.magnon_energies)[0]
+        E_vals = np.real(self.magnon_energies).flatten()
+        E_vals = E_vals[E_vals >= 0]
+        for i, E0 in enumerate(self.dos_E):
+            self.magnon_dos[i] = np.sum(
+                np.exp(-(E_vals  - E0)**2 / (2 * self.smearing**2))
+            )
+        
+        self.magnon_dos /= (self.smearing * np.sqrt(2 * np.pi)) * num_kpoints
 
     def run_computations(self):
+        self._compute_reciprocal()
         if self.compute_magnon_bands:
-            self._fourier_transform_kpath()
-            self._magnon_energies()
+            self._fourier_transform("path")
+            self._magnon_energies("path")
             plt.xticks(self.letters_position, self.letters)
+            plt.ylabel("E (meV)")
             for band in range(self.magnon_energies.shape[1]):
                 plt.plot(self.kpath_x, np.abs(self.magnon_energies[:, band]))
             plt.gca().set_ylim(bottom=0)
             plt.savefig("bandstructure.png", dpi=300)
+            plt.clf()
+        if self.compute_magnon_dos:
+            self._make_grid()
+            self._fourier_transform("grid")
+            self._magnon_energies("grid")
+            self._compute_dos()
+            plt.xlabel("E (meV)")
+            plt.ylabel("DOS (states/meV)")
+            plt.plot(self.dos_E, self.magnon_dos)
+            plt.savefig("dos.png", dpi=300)
+            plt.clf()
+
         
