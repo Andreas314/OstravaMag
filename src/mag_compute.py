@@ -241,6 +241,8 @@ class mag_compute:
         if type_write == "path":
             plt.xticks(self.letters_position, self.letters)
             plt.ylabel("E (meV)")
+            for pos in self.letters_position:
+                plt.axvline(x = pos, color = "grey", lw = 0.2)
             for band in range(self.magnon_energies.shape[1]):
                 plt.plot(self.kpath_x, np.real(self.magnon_energies[:, band]))
             plt.gca().set_ylim(bottom=0)
