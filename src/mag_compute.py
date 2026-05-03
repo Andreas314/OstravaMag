@@ -1,6 +1,8 @@
 from read_J import read_data, read_kpath
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+
 class mag_compute:
     def __init__(self, arguments):
         
@@ -220,26 +222,44 @@ class mag_compute:
         self.magnon_dos /= (self.smearing * np.sqrt(2 * np.pi)) * num_kpoints
 
     def run_computations(self):
+        if not os.path.exists("./J2mag_results"):
+            os.makedirs("./J2mag_results")
         self._compute_reciprocal()
         if self.compute_magnon_bands:
             self._fourier_transform("path")
             self._magnon_energies("path")
-            plt.xticks(self.letters_position, self.letters)
-            plt.ylabel("E (meV)")
-            for band in range(self.magnon_energies.shape[1]):
-                plt.plot(self.kpath_x, np.abs(self.magnon_energies[:, band]))
-            plt.gca().set_ylim(bottom=0)
-            plt.savefig("bandstructure.png", dpi=300)
-            plt.clf()
+            self._write("path")
         if self.compute_magnon_dos:
             self._make_grid()
             self._fourier_transform("grid")
             self._magnon_energies("grid")
             self._compute_dos()
+            self._write("grid")
+
+    def _write(self, type_write):
+        if type_write == "path":
+            plt.xticks(self.letters_position, self.letters)
+            plt.ylabel("E (meV)")
+            for band in range(self.magnon_energies.shape[1]):
+                plt.plot(self.kpath_x, np.real(self.magnon_energies[:, band]))
+            plt.gca().set_ylim(bottom=0)
+            plt.savefig("./J2mag_results/bandstructure.png", dpi=300)
+            plt.clf()
+            with open("./J2mag_results/bandstructure.dat", "w") as f:
+                for band in range(self.magnon_energies.shape[1]):
+                    for i, k in enumerate(self.kpath_x):
+                        if (self.magnon_energies[i, band] > 0):
+                            f.write(f"{k:8.5f}" + "\t" + f"{self.magnon_energies[i, band]:8.4f}"+"\n")
+                    f.write("\n")
+
+
+        elif type_write == "grid":
             plt.xlabel("E (meV)")
             plt.ylabel("DOS (states/meV)")
             plt.plot(self.dos_E, self.magnon_dos)
-            plt.savefig("dos.png", dpi=300)
+            plt.savefig("./J2mag_results/dos.png", dpi=300)
             plt.clf()
-
+            with open("./J2mag_results/dos.dat", "w") as f:
+                for i, E0 in enumerate(self.dos_E):
+                    f.write(f"{E0:8.4f}" + "\t" + f"{self.magnon_dos[i]:8.7f}"+"\n")
         
