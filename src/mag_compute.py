@@ -12,6 +12,8 @@ class mag_compute:
         ##others
         self.max_R = arguments.max_R
         self.data_name = arguments.name
+        self.structure_name = arguments.name_structure
+        self.to_exclude = np.array(arguments.exclude_elements, dtype = int)
         self.data_type = arguments.type
         self.kpath_name = arguments.kpath_name
         self.max_E = arguments.max_E
@@ -105,7 +107,7 @@ class mag_compute:
 
     def read(self):
         #reads from all the files
-        self.Jr, self.cell, self.magmoms = read_data(self.data_type, self.data_name, self.max_R)
+        self.Jr, self.cell, self.magmoms = read_data(self.data_type, self.data_name, self.max_R, self.structure_name, self.to_exclude)
         if self.compute_magnon_bands:
             num_points, kpoints, self.letters = read_kpath(self.kpath_name)
             self._make_path(num_points, kpoints)
