@@ -222,8 +222,9 @@ class mag_compute:
         self.magnon_dos /= (self.smearing * np.sqrt(2 * np.pi)) * num_kpoints
 
     def run_computations(self):
-        if not os.path.exists("./J2mag_results"):
-            os.makedirs("./J2mag_results")
+        self.dir = "./J2mag_results_"+self.data_type
+        if not os.path.exists(self.dir):
+            os.makedirs(self.dir)
         self._compute_reciprocal()
         if self.compute_magnon_bands:
             self._fourier_transform("path")
@@ -243,13 +244,13 @@ class mag_compute:
             for band in range(self.magnon_energies.shape[1]):
                 plt.plot(self.kpath_x, np.real(self.magnon_energies[:, band]))
             plt.gca().set_ylim(bottom=0)
-            plt.savefig("./J2mag_results/bandstructure.png", dpi=300)
+            plt.savefig(self.dir+"/bandstructure.png", dpi=300)
             plt.clf()
-            with open("./J2mag_results/bandstructure.dat", "w") as f:
+            with open(self.dir+"/bandstructure.dat", "w") as f:
                 for band in range(self.magnon_energies.shape[1]):
                     for i, k in enumerate(self.kpath_x):
                         if (self.magnon_energies[i, band] > 0):
-                            f.write(f"{k:8.5f}" + "\t" + f"{self.magnon_energies[i, band]:8.4f}"+"\n")
+                            f.write(f"{k:8.5f}" + "\t" + f"{np.real(self.magnon_energies[i, band]):8.4f}"+"\n")
                     f.write("\n")
 
 
@@ -257,9 +258,9 @@ class mag_compute:
             plt.xlabel("E (meV)")
             plt.ylabel("DOS (states/meV)")
             plt.plot(self.dos_E, self.magnon_dos)
-            plt.savefig("./J2mag_results/dos.png", dpi=300)
+            plt.savefig(self.dir+"/dos.png", dpi=300)
             plt.clf()
-            with open("./J2mag_results/dos.dat", "w") as f:
+            with open(self.dir+"/dos.dat", "w") as f:
                 for i, E0 in enumerate(self.dos_E):
                     f.write(f"{E0:8.4f}" + "\t" + f"{self.magnon_dos[i]:8.7f}"+"\n")
         
