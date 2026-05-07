@@ -106,7 +106,7 @@ def read_OpenMX(data_name, max_R, structure_name, to_exclude):
                         J_1 = np.where(mag_atoms == index[0] - 1)[0]
                         J_2 = np.where(mag_atoms == index[1] - 1)[0]
                         #match TB2J convention with signs and no self-interaction + 2*
-                        result[index[2], index[3], index[4], J_1, J_2] = 2 * float(parts[5]) * np.sign(moments[J_1, 2]) * np.sign(moments[J_2, 2]) / 1000
+                        result[index[2], index[3], index[4], J_1, J_2] = 2 * float(parts[5])* np.sign(moments[J_1, 2]) * np.sign(moments[J_2, 2]) / 1000
                         if (index[2] == max_R[0] and index[3] == max_R[1] and index[4] == max_R[2]) and (J_1 == J_2):
                             result[index[2], index[3], index[4], J_1, J_2] = 0
                     else:

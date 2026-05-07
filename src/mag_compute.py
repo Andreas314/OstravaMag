@@ -43,7 +43,6 @@ class mag_compute:
         
         ## reciprocal space variables
         self.Jq = np.array([]) #Js in reciprocal space for kpath
-        self.Jq_grid = np.array([]) #Js in reciprocal space for kgrid
         self.reciprocal = np.array([]) #basis of the reciprocal sapce
         self.k_grid = np.array([]) #actual full gdrid
         ##
@@ -119,7 +118,7 @@ class mag_compute:
             self.Jq = np.zeros(shape = (len(self.kpath), np.shape(self.Jr)[-1], np.shape(self.Jr)[-1]), dtype = complex)
             k_size = len(self.kpath)
         elif _type == "grid":
-            self.Jq_grid = np.zeros(shape = (len(self.k_grid), np.shape(self.Jr)[-1], np.shape(self.Jr)[-1]), dtype = complex)
+            self.Jq = np.zeros(shape = (len(self.k_grid), np.shape(self.Jr)[-1], np.shape(self.Jr)[-1]), dtype = complex)
             k_size = len(self.k_grid)
         else:
             return 0
@@ -137,10 +136,7 @@ class mag_compute:
                         #computet he real space difference vector for the phase calculation
                         R_ = np.dot(np.array([Rx, Ry, Rz]), self.cell)  
                         #shift the indices so that they start in zero
-                        if _type == "path":
-                            self.Jq[q_ind] += self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] * np.exp(1j * np.dot(q_, R_))
-                        else:
-                            self.Jq_grid[q_ind] += self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] * np.exp(1j * np.dot(q_, R_))
+                        self.Jq[q_ind] += self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] * np.exp(1j * np.dot(q_, R_))
     
     def _magnon_energies(self, _type):
         if _type == "path":
@@ -176,20 +172,13 @@ class mag_compute:
         for iq in range(Nq):
             for a in range(Na):
                 for b in range(Na):
-                    if _type == "path":
                         Aq[iq, a, b] += 2 * ((KroneckerDelta(a,b) * sJ0[a] / S[a]) 
                               - (KroneckerDelta(n[a],n[b]) * self.Jq[iq,a,b] / np.sqrt(S[a] * S[b])))
-                    else:
-                        Aq[iq, a, b] += 2 * ((KroneckerDelta(a,b) * sJ0[a] / S[a]) 
-                              - (KroneckerDelta(n[a],n[b]) * self.Jq_grid[iq,a,b] / np.sqrt(S[a] * S[b])))
         Bq = np.zeros((Nq, Na, Na), complex)
         for iq in range(Nq):
             for a in range(Na):
                 for b in range(Na):
-                    if _type == "path":
                         Bq[iq, a, b] -= 2* (KroneckerDelta(n[a],-n[b]) * self.Jq[iq,a,b] / np.sqrt(S[a] * S[b]))
-                    else:
-                        Bq[iq, a, b] -= 2* (KroneckerDelta(n[a],-n[b]) * self.Jq_grid[iq,a,b] / np.sqrt(S[a] * S[b]))
         Hq = np.zeros((Nq, 2 * Na, 2 * Na), complex)
         for iq in range(Nq):
             for a in range(2 * Na):
@@ -213,13 +202,16 @@ class mag_compute:
     def _compute_dos(self):
         num_kpoints = np.shape(self.magnon_energies)[0]
         E_vals = np.real(self.magnon_energies).flatten()
-        E_vals = E_vals[E_vals >= 0]
+        imag = (np.imag(self.magnon_energies).flatten() > 1e-2)
+        if any(imag):
+            print("WARNIN: " + str(sum(imag)) + " points with non-zero imaginary component")
+        E_vals = E_vals[(E_vals > 0.1) & (~imag)]
         for i, E0 in enumerate(self.dos_E):
             self.magnon_dos[i] = np.sum(
                 np.exp(-(E_vals  - E0)**2 / (2 * self.smearing**2))
             )
-        
         self.magnon_dos /= (self.smearing * np.sqrt(2 * np.pi)) * num_kpoints
+        print("Integral of DOS: " + str(np.trapz(self.magnon_dos) * (self.dos_E[1] - self.dos_E[0])))
 
     def run_computations(self):
         self.dir = "./J2mag_results_"+self.data_type
