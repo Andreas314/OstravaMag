@@ -147,8 +147,6 @@ class mag_compute:
             x_size = 2 * self.max_R[0] + 1
             y_size = 2 * self.max_R[1] + 1
             z_size = 2 * self.max_R[2] + 1
-            for k in self.k_grid:
-                print(k)
             self.Jr = np.zeros(shape = (x_size, y_size, z_size, np.shape(self.Jq)[-1], np.shape(self.Jq)[-1]), dtype = float)
             for Rx in range(-self.max_R[0], self.max_R[0] + 1):
                 for Ry in range(-self.max_R[1], self.max_R[1] + 1):
@@ -228,7 +226,7 @@ class mag_compute:
         E_vals = np.real(self.magnon_energies).flatten()
         imag = (np.imag(self.magnon_energies).flatten() > 1e-2)
         if any(imag):
-            print("WARNIN: " + str(sum(imag)) + " points with non-zero imaginary component")
+            print("WARNING: " + str(sum(imag)) + " points with non-zero imaginary component")
         E_vals = E_vals[(E_vals > 0.1) & (~imag)]
         for i, E0 in enumerate(self.dos_E):
             self.magnon_dos[i] = np.sum(
