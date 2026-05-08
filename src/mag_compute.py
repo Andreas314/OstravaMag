@@ -2,7 +2,7 @@ from read_J import read_data, read_kpath
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-
+from gpaw.response.heisenberg import get_q0_index
 class mag_compute:
     def __init__(self, arguments):
         
@@ -39,12 +39,14 @@ class mag_compute:
         self.Jr = np.array([])
         self.cell = np.array([]) #cell vectors
         self.magmoms = np.array([]) #magnetic moments inside the cell (only > 0)
+        self.mag_elem_map = np.array([]) #indices of the original magnetic elements from GPAW input
         ###
         
         ## reciprocal space variables
         self.Jq = np.array([]) #Js in reciprocal space for kpath
         self.reciprocal = np.array([]) #basis of the reciprocal sapce
         self.k_grid = np.array([]) #actual full gdrid
+        self.weights = np.array([]) #weights of the kpoints in the GPAW calculation
         ##
 
         self.magnon_energies = np.array([]) #magnon bands
@@ -69,11 +71,11 @@ class mag_compute:
         self.k_grid = np.zeros( shape = (np.prod(np.array(self.k_grid_division)), 3), dtype = float)
         ii = 0
         for kx in range(self.k_grid_division[0]):
-            vx = kx / self.k_grid_division[0] * self.reciprocal[0]
+            vx = kx / self.k_grid_division[0] * np.array([1,0,0])
             for ky in range(self.k_grid_division[1]):
-                vy = ky / self.k_grid_division[1] * self.reciprocal[1]
+                vy = ky / self.k_grid_division[1] * np.array([0,1,0])
                 for kz in range(self.k_grid_division[2]):
-                    vz = kz / self.k_grid_division[2] * self.reciprocal[2]
+                    vz = kz / self.k_grid_division[2] * np.array([0,0,1])
                     self.k_grid[ii] = vx + vy + vz
                     ii += 1
 
@@ -108,7 +110,10 @@ class mag_compute:
 
     def read(self):
         #reads from all the files
-        self.Jr, self.cell, self.magmoms = read_data(self.data_type, self.data_name, self.max_R, self.structure_name, self.to_exclude)
+        if (self.data_type != "GPAW"):
+            self.Jr, self.cell, self.magmoms = read_data(self.data_type, self.data_name, self.max_R, self.structure_name, self.to_exclude)
+        else:
+            self.Jq, self.k_grid, self.mag_elem_map, self.cell, self.magmoms = read_data(self.data_type, self.data_name, self.max_R, self.structure_name, self.to_exclude)
         if self.compute_magnon_bands:
             num_points, kpoints, self.letters = read_kpath(self.kpath_name)
             self._make_path(num_points, kpoints)
@@ -137,13 +142,32 @@ class mag_compute:
                         R_ = np.dot(np.array([Rx, Ry, Rz]), self.cell)  
                         #shift the indices so that they start in zero
                         self.Jq[q_ind] += self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] * np.exp(1j * np.dot(q_, R_))
+
+    def _inverse_fourier_transform(self):
+            x_size = 2 * self.max_R[0] + 1
+            y_size = 2 * self.max_R[1] + 1
+            z_size = 2 * self.max_R[2] + 1
+            for k in self.k_grid:
+                print(k)
+            self.Jr = np.zeros(shape = (x_size, y_size, z_size, np.shape(self.Jq)[-1], np.shape(self.Jq)[-1]), dtype = float)
+            for Rx in range(-self.max_R[0], self.max_R[0] + 1):
+                for Ry in range(-self.max_R[1], self.max_R[1] + 1):
+                    for Rz in range(-self.max_R[2], self.max_R[2] + 1):
+                        #computet he real space difference vector for the phase calculation
+                        R_ = np.dot(np.array([Rx, Ry, Rz]), self.cell)  
+                        #shift the indices so that they start in zero
+                        tmp = np.zeros(shape = (np.shape(self.Jq)[-1], np.shape(self.Jq)[-1]), dtype = complex)
+                        for q_ind, q in enumerate(self.k_grid):
+                             q_ = np.dot(q, self.reciprocal)
+                             tmp  +=  (self.Jq[q_ind]* np.exp(-1j * np.dot(q_, R_))) / len(self.k_grid)
+                        self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] = np.real(tmp)
     
     def _magnon_energies(self, _type):
         if _type == "path":
             q0 = self.gamma
             Nq = self.path_len
         if _type == "grid":
-            q0 = 0
+            q0 = get_q0_index(self.k_grid)
             Nq = np.shape(self.k_grid)[0]
         J0 = self.Jq[q0]
         Na = len(J0)
@@ -211,23 +235,34 @@ class mag_compute:
                 np.exp(-(E_vals  - E0)**2 / (2 * self.smearing**2))
             )
         self.magnon_dos /= (self.smearing * np.sqrt(2 * np.pi)) * num_kpoints
-        print("Integral of DOS: " + str(np.trapz(self.magnon_dos) * (self.dos_E[1] - self.dos_E[0])))
+        #self.magnon_dos /= np.trapz(self.magnon_dos* (self.dos_E[1] - self.dos_E[0]))
 
     def run_computations(self):
         self.dir = "./J2mag_results_"+self.data_type
         if not os.path.exists(self.dir):
             os.makedirs(self.dir)
         self._compute_reciprocal()
-        if self.compute_magnon_bands:
-            self._fourier_transform("path")
-            self._magnon_energies("path")
-            self._write("path")
-        if self.compute_magnon_dos:
-            self._make_grid()
-            self._fourier_transform("grid")
+        if self.data_type != "GPAW":
+             if self.compute_magnon_bands:
+                 self._fourier_transform("path")
+                 self._magnon_energies("path")
+                 self._write("path")
+             if self.compute_magnon_dos:
+                 self._make_grid()
+                 self._fourier_transform("grid")
+                 self._magnon_energies("grid")
+                 self._compute_dos()
+                 self._write("grid")
+        else:
+            self._inverse_fourier_transform()
+            self._write("Jr")
             self._magnon_energies("grid")
             self._compute_dos()
             self._write("grid")
+            self._fourier_transform("path")
+            self._magnon_energies("path")
+            self._write("path")
+
 
     def _write(self, type_write):
         if type_write == "path":
@@ -257,4 +292,16 @@ class mag_compute:
             with open(self.dir+"/dos.dat", "w") as f:
                 for i, E0 in enumerate(self.dos_E):
                     f.write(f"{E0:8.4f}" + "\t" + f"{self.magnon_dos[i]:8.7f}"+"\n")
+        elif type_write == "Jr":
+            with open(self.dir + "/Jr_J2mag_GPAW.out", "w") as f:
+                 f.write(f"i j Rx Ry Rz J_ij (meV)"+"\n")
+                 for Rx in range(-self.max_R[0], self.max_R[0] + 1):
+                     for Ry in range(-self.max_R[1], self.max_R[1] + 1):
+                         for Rz in range(-self.max_R[2], self.max_R[2] + 1):
+                             J = self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]]
+                             for i in range(np.shape(J)[0]):
+                                 for j in range(np.shape(J)[0]):
+                                     if not((i == j) and (Rx == 0 and Ry == 0 and Rz == 0)):
+                                        f.write(f"{i:d} {j:d} {Rx:d} {Ry:d} {Rz:d} {J[i, j] * 1000:6.5f}"+"\n")
+    
         
