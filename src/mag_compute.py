@@ -13,8 +13,8 @@ class mag_compute:
         ##
         ##others
         self.max_R = arguments.max_R
-        self.data_name = arguments.name
-        self.structure_name = arguments.name_structure
+        self.data_name = arguments.directory_name
+        self.structure_name = arguments.root_name
         self.to_exclude = np.array(arguments.exclude_elements, dtype = int)
         self.data_type = arguments.type
         self.kpath_name = arguments.kpath_name

@@ -46,6 +46,7 @@ def read_kpath(filename):
 ###COMMON AREA
 
 def read_data(data_type, data_name, max_R, structure_name = "", to_exclude = []):
+    print("Data format: " + data_type)
     if (data_type == "TB2J"):
         result = read_TB2J(data_name, max_R, to_exclude)
     elif (data_type == "OpenMX"):
@@ -71,7 +72,7 @@ def find_non_mag(moments, is_computed, to_exclude):
 def read_OpenMX(data_name, max_R, structure_name, to_exclude):
     moments, mag_atoms = read_moments_OpenMX(structure_name, data_name, to_exclude)
     J_size = len(mag_atoms)
-    cell = read_cell_OpenMX(structure_name)
+    cell = read_cell_OpenMX(data_name, structure_name)
     R_size_x = max_R[0] * 2 + 1
     R_size_y = max_R[1] * 2 + 1
     R_size_z = max_R[2] * 2 + 1
@@ -80,7 +81,7 @@ def read_OpenMX(data_name, max_R, structure_name, to_exclude):
     seen_elements = []
     switch = False
     elements = 0
-    with open(data_name, "r") as f:
+    with open(data_name + "/jx.out", "r") as f:
         for line in f:
             if not switch:
                 if line == 97*"-" + "\n":
@@ -115,11 +116,12 @@ def read_OpenMX(data_name, max_R, structure_name, to_exclude):
             raise RuntimeError("Wrong number of elements in the input file!")
         return result, cell, moments
 
-def read_cell_OpenMX(structure_name):
+def read_cell_OpenMX(data_name, structure_name):
     #Reads structural input from the *.out file
     switch = False
     cell = np.zeros(shape = (3,3), dtype = float)
-    with open(structure_name, "r") as f:
+    print("Reading structure from: " + data_name + "/" + structure_name + ".out")
+    with open(data_name + "/" + structure_name + ".out", "r") as f:
         for line in f:
             ##Find the structural block
             if line == "<Atoms.UnitVectors\n":
@@ -142,7 +144,7 @@ def read_moments_OpenMX(structure_name, data_name, to_exclude):
     #Read the magnetic moments and filter the elements
     moments = np.array([0, 0, 0])
     switch = False
-    with open(structure_name, "r") as f:
+    with open(data_name + "/" + structure_name + ".out", "r") as f:
         for line in f:
             ###Find the moment block
             if not switch:
@@ -172,7 +174,8 @@ def find_indices_OpenMX(data_name):
     left_indices = set([])
     right_indices = set([])
     atoms = 0
-    with open(data_name, "r") as f:
+    print("Reading J_ij from: " + data_name + "/jx.out")
+    with open(data_name + "/jx.out", "r") as f:
         for line in f:
             parts = line.strip().split()
             if not switch:
@@ -205,7 +208,8 @@ def find_indices_OpenMX(data_name):
 ###TB2J
 
 def read_TB2J(data_name, max_R, to_exclude):
-    with open(data_name, 'rb') as file:
+    print("Reading data from: " + data_name + "/TB2J.pickle")
+    with open(data_name + "/TB2J.pickle", 'rb') as file:
         data = pickle.load(file)
     R_size_x = max_R[0] * 2 + 1
     R_size_y = max_R[1] * 2 + 1
