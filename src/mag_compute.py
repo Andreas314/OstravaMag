@@ -18,8 +18,8 @@ class mag_compute:
         self.to_exclude = np.array(arguments.exclude_elements, dtype = int)
         self.data_type = arguments.type
         self.kpath_name = arguments.kpath_name
-        self.max_E = arguments.max_E
-        self.min_E = arguments.min_E
+        self.max_T = arguments.max_T
+        self.num_T = arguments.num_T
         self.n_points = arguments.n_points
         self.smearing = arguments.smearing
         self.k_grid_division = arguments.k_grid
@@ -50,8 +50,7 @@ class mag_compute:
         ##
 
         self.magnon_energies = np.array([]) #magnon bands
-        self.dos_E = np.linspace(self.min_E, self.max_E, self.n_points)
-        self.magnon_dos = np.zeros(shape = (len(self.dos_E)), dtype = float) #magnon bands
+        self.interval_T = np.linspace(0, self.max_T, self.num_T)
     
     def _compute_reciprocal(self):
         #function to compute the reciprocal basis
@@ -222,18 +221,20 @@ class mag_compute:
         self.magnon_energies = np.sort(self.magnon_energies, axis=1) * 1000
     
     def _compute_dos(self):
+        self.dos_E = np.linspace(-3 * self.smearing, max(np.real(self.magnon_energies[:, -1])) + 3*self.smearing, self.n_points)
+        self.magnon_dos = np.zeros(shape = (len(self.dos_E)), dtype = float) #magnon bands
         num_kpoints = np.shape(self.magnon_energies)[0]
         E_vals = np.real(self.magnon_energies).flatten()
-        imag = (np.imag(self.magnon_energies).flatten() > 1e-2)
+        imag = (np.imag(self.magnon_energies).flatten() > 1e-3)
         if any(imag):
             print("WARNING: " + str(sum(imag)) + " points with non-zero imaginary component")
-        E_vals = E_vals[(E_vals > 0.1) & (~imag)]
+        E_vals = E_vals[((E_vals > 0.25) * (~imag))]
         for i, E0 in enumerate(self.dos_E):
             self.magnon_dos[i] = np.sum(
                 np.exp(-(E_vals  - E0)**2 / (2 * self.smearing**2))
             )
         self.magnon_dos /= (self.smearing * np.sqrt(2 * np.pi)) * num_kpoints
-        #self.magnon_dos /= np.trapz(self.magnon_dos* (self.dos_E[1] - self.dos_E[0]))
+        self.magnon_dos /= np.trapz(self.magnon_dos* (self.dos_E[1] - self.dos_E[0]))
 
     def run_computations(self):
         self.dir = "./J2mag_results_"+self.data_type
@@ -254,12 +255,14 @@ class mag_compute:
         else:
             self._inverse_fourier_transform()
             self._write("Jr")
-            self._magnon_energies("grid")
-            self._compute_dos()
-            self._write("grid")
-            self._fourier_transform("path")
-            self._magnon_energies("path")
-            self._write("path")
+            if self.compute_magnon_dos:
+                self._magnon_energies("grid")
+                self._compute_dos()
+                self._write("grid")
+            if self.compute_magnon_bands:
+                self._fourier_transform("path")
+                self._magnon_energies("path")
+                self._write("path")
 
 
     def _write(self, type_write):
@@ -276,7 +279,7 @@ class mag_compute:
             with open(self.dir+"/bandstructure.dat", "w") as f:
                 for band in range(self.magnon_energies.shape[1]):
                     for i, k in enumerate(self.kpath_x):
-                        if (self.magnon_energies[i, band] > 0):
+                        if (self.magnon_energies[i, band] > 0 and np.imag(self.magnon_energies[i, band]) < 1e-3):
                             f.write(f"{k:8.5f}" + "\t" + f"{np.real(self.magnon_energies[i, band]):8.4f}"+"\n")
                     f.write("\n")
 
@@ -290,6 +293,14 @@ class mag_compute:
             with open(self.dir+"/dos.dat", "w") as f:
                 for i, E0 in enumerate(self.dos_E):
                     f.write(f"{E0:8.4f}" + "\t" + f"{self.magnon_dos[i]:8.7f}"+"\n")
+            with open(self.dir+"/grid.dat", "w") as f:
+                    for i, k in enumerate(self.k_grid):
+                        number = ""
+                        for band in range(self.magnon_energies.shape[1]):
+                            if (self.magnon_energies[i, band] > 0):
+                                number += f"\t{np.real(self.magnon_energies[i,band]):8.4f}"
+                        f.write(f"{k[0]:8.5f}\t{k[1]:8.5f}\t{k[2]:8.5f}" + number +"\n")
+                    f.write("\n")
         elif type_write == "Jr":
             with open(self.dir + "/Jr_J2mag_GPAW.out", "w") as f:
                  f.write(f"i j Rx Ry Rz J_ij (meV)"+"\n")

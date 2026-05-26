@@ -12,8 +12,8 @@ def arg_parse():
     parser.add_argument('--kpath_name', type = str,  help='Name of a file with a kpath for the calculation of the magnon bandstructure (no default)', default = "__UNDEFINED__" )
     parser.add_argument('--k_grid', nargs=3, type = int,  help='Number of kpoints in each direcction of the BZ (default: 8,8,8)', default = [8, 8, 8])
     parser.add_argument('--smearing', type = float,  help='Size of gaussian smearing in meV (default: 5 meV)', default = 5)
-    parser.add_argument('--max_E',  type = float,  help='Maximal energy of DOS to calculate (default: 600 meV)', default = 600)
-    parser.add_argument('--min_E',  type = float,  help='Minimal energy of DOS to calculate (default: 0 meV)', default = 0)
+    parser.add_argument('--max_T',  type = float,  help='Maximal temperature to calculatet he thermodynamical quantities (default: 300 K)', default = 300)
+    parser.add_argument('--num_T',  type = float,  help='Number of points in the temperature interval (default: 300)', default = 300)
     parser.add_argument('--n_points', type = int,  help='Number of points in DOS (default: 50 meV)', default = 50)
     arguments = parser.parse_args()
     return arguments
