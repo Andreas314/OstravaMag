@@ -51,7 +51,7 @@ class mag_compute:
         ##
 
         self.magnon_energies = np.array([]) #magnon bands
-        self.interval_T = np.linspace(1e-4, self.max_T, self.num_T)
+        self.interval_T = np.linspace(0, self.max_T, self.num_T)
         self.thermo_quant = np.zeros(shape = (self.num_T, 4)) #Internal energy, Free energy, Entropy, Heat capacity
         self.K_B = 0.08617 #meV/K
     def _compute_reciprocal(self):
@@ -325,9 +325,9 @@ class mag_compute:
             for band in range(self.magnon_energies.shape[1]):
                 plt.plot(self.kpath_x, np.real(self.magnon_energies[:, band]))
             plt.gca().set_ylim(bottom=0)
-            plt.savefig(self.dir+"/bandstructure.png", dpi=300)
+            plt.savefig(self.dir+"/magnon_bands.png", dpi=300)
             plt.clf()
-            with open(self.dir+"/bandstructure.dat", "w") as f:
+            with open(self.dir+"/magnon_bands.dat", "w") as f:
                 for band in range(self.magnon_energies.shape[1]):
                     for i, k in enumerate(self.kpath_x):
                         if (self.magnon_energies[i, band] > 0 and np.imag(self.magnon_energies[i, band]) < 1e-3):
@@ -339,12 +339,12 @@ class mag_compute:
             plt.xlabel("E (meV)")
             plt.ylabel("DOS (states/meV)")
             plt.plot(self.dos_E, self.magnon_dos)
-            plt.savefig(self.dir+"/dos.png", dpi=300)
+            plt.savefig(self.dir+"/magnon_dos.png", dpi=300)
             plt.clf()
-            with open(self.dir+"/dos.dat", "w") as f:
+            with open(self.dir+"/magnon_dos.dat", "w") as f:
                 for i, E0 in enumerate(self.dos_E):
                     f.write(f"{E0:8.4f}" + "\t" + f"{self.magnon_dos[i]:8.7f}"+"\n")
-            with open(self.dir+"/grid.dat", "w") as f:
+            with open(self.dir+"/magnons_on_grid.dat", "w") as f:
                     for i, k in enumerate(self.k_grid):
                         number = ""
                         for band in range(self.magnon_energies.shape[1]):
@@ -367,38 +367,33 @@ class mag_compute:
 
         elif type_write == "thermo":
             with open(self.dir+"/thermo.dat", "w") as f:
-                    f.write(f"T (K)\tU (meV)\tF (meV\tS (meV/K)\tC (meV/K))\n")
+                    f.write(f"T (K)\tU (meV)\tF (meV)\tS (meV/K)\tC (meV/K)\n")
                     for i in range(len(self.interval_T)):
                         output = f"{self.interval_T[i]:9.6f}\t"
                         for j in range(4):
                             output += f"{self.thermo_quant[i, j]:9.6f}\t"
                         output += "\n"
                         f.write(output)
-            #plot U
-            plt.xlabel("T (K)")
-            plt.ylabel("U (meV)")
-            plt.plot(self.interval_T, self.thermo_quant[:, 0])
-            plt.savefig(self.dir+"/U.png", dpi=300)
-            plt.clf()
-            #plot F
-            plt.xlabel("T (K)")
-            plt.ylabel("F (meV)")
-            plt.plot(self.interval_T, self.thermo_quant[:, 1])
-            plt.savefig(self.dir+"/F.png", dpi=300)
-            plt.clf()
-            #plot S
-            plt.xlabel("T (K)")
-            plt.ylabel(f"S (meV$\times$K$^{-1}$)")
-            plt.plot(self.interval_T, self.thermo_quant[:, 2])
-            plt.savefig(self.dir+"/S.png", dpi=300)
-            plt.clf()
-            #plot C
-            plt.xlabel("T (K)")
-            plt.ylabel(f"$C_Vm$ (meV$\times$K$^{-1}$)")
-            plt.plot(self.interval_T, self.thermo_quant[:, 3])
-            plt.savefig(self.dir+"/C_V.png", dpi=300)
-            plt.clf()
-
+        fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+        fig.suptitle("Magnon Thermodynamic Quantities", fontsize=14)
+        
+        plots = [
+            (0, 0, "U (meV)",                        "Internal Energy",  0),
+            (0, 1, "F (meV)",                        "Free Energy",      1),
+            (1, 0, f"S (meV$\times$K$^{-1}$)",       "Entropy",          2),
+            (1, 1, f"$C_V$ (meV$\times$K$^{-1}$)",   "Heat Capacity",    3),
+        ]
+        
+        for row, col, ylabel, title, idx in plots:
+            ax = axes[row, col]
+            ax.plot(self.interval_T, self.thermo_quant[:, idx])
+            ax.set_xlabel("T (K)")
+            ax.set_ylabel(ylabel)
+            ax.set_title(title)
+        
+        plt.tight_layout()
+        plt.savefig(self.dir + "/thermo.png", dpi=300)
+        plt.clf()
 
     
         
