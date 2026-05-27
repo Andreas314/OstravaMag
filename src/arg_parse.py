@@ -9,6 +9,7 @@ def arg_parse():
     parser.add_argument('--exclude_elements',nargs = '*', type = int,  help='Indices of elements to exclude from the calculation (default: none)', default = [])
     parser.add_argument('--compute_magnon_bands', action = "store_true",  help='Turns on computation of magnon band structure' )
     parser.add_argument('--compute_magnon_dos', action = "store_true",  help='Turns on computation of magnon density of states' )
+    parser.add_argument('--compute_magnon_thermo', action = "store_true",  help='Turns on computation of the related thermodynamical quantities' )
     parser.add_argument('--kpath_name', type = str,  help='Name of a file with a kpath for the calculation of the magnon bandstructure (no default)', default = "__UNDEFINED__" )
     parser.add_argument('--k_grid', nargs=3, type = int,  help='Number of kpoints in each direcction of the BZ (default: 8,8,8)', default = [8, 8, 8])
     parser.add_argument('--smearing', type = float,  help='Size of gaussian smearing in meV (default: 5 meV)', default = 5)

@@ -10,6 +10,7 @@ class mag_compute:
         ##switches
         self.compute_magnon_bands = arguments.compute_magnon_bands
         self.compute_magnon_dos = arguments.compute_magnon_dos
+        self.compute_magnon_thermo = arguments.compute_magnon_thermo
         ##
         ##others
         self.max_R = arguments.max_R
@@ -50,8 +51,9 @@ class mag_compute:
         ##
 
         self.magnon_energies = np.array([]) #magnon bands
-        self.interval_T = np.linspace(0, self.max_T, self.num_T)
-    
+        self.interval_T = np.linspace(1e-4, self.max_T, self.num_T)
+        self.thermo_quant = np.zeros(shape = (self.num_T, 4)) #Internal energy, Free energy, Entropy, Heat capacity
+        self.K_B = 0.08617 #meV/K
     def _compute_reciprocal(self):
         #function to compute the reciprocal basis
         a1, a2, a3 = self.cell
@@ -236,6 +238,52 @@ class mag_compute:
         self.magnon_dos /= (self.smearing * np.sqrt(2 * np.pi)) * num_kpoints
         self.magnon_dos /= np.trapz(self.magnon_dos* (self.dos_E[1] - self.dos_E[0]))
 
+    def _compute_thermo(self):
+        mask = self.dos_E >= 0
+        self.dos_E = self.dos_E[mask]
+        self.magnon_dos = self.magnon_dos[mask]
+        
+        dE = self.dos_E[1] - self.dos_E[0]
+        g = self.magnon_dos
+        E = self.dos_E
+        kB = self.K_B
+    
+        # zero point energy — same for all T
+        U_zp = np.trapz(g * E * 0.5, dx=dE)
+    
+        for i, T in enumerate(self.interval_T):
+            if T == 0:
+                self.thermo_quant[i, 0] = U_zp
+                self.thermo_quant[i, 1] = U_zp
+                self.thermo_quant[i, 2] = 0.0
+                self.thermo_quant[i, 3] = 0.0
+                continue
+        
+            kBT = kB * T
+            x = E / kBT
+        
+            # clip x to a safe range BEFORE any exp/expm1 calls
+            # x > ~700 means n ≈ 0 and all thermal terms vanish anyway
+            x_safe = np.clip(x, 1e-10, 500.0)
+        
+            n = 1.0 / np.expm1(x_safe)  # no overflow since x_safe <= 500
+        
+            # internal energy
+            self.thermo_quant[i, 0] = np.trapz(g * E * (0.5 + n), dx=dE)
+        
+            # free energy: log(1 - exp(-x)) = log(expm1(x)) - x, stable for all x_safe
+            log_term = np.log(np.expm1(x_safe)) - x_safe
+            self.thermo_quant[i, 1] = np.trapz(g * (0.5 * E + kBT * log_term), dx=dE)
+        
+            # entropy
+            entropy_term = x_safe / np.expm1(x_safe) - np.log(np.expm1(x_safe)) + x_safe
+            self.thermo_quant[i, 2] = kB * np.trapz(g * entropy_term, dx=dE)
+        
+            # heat capacity: x^2 * e^x / (e^x - 1)^2 = x^2 * n * (n+1)
+            # avoids exp entirely — n already computed, and (n+1) is trivial
+            cv_term = x_safe**2 * n * (n + 1.0)
+            self.thermo_quant[i, 3] = kB * np.trapz(g * cv_term, dx=dE)
+
     def run_computations(self):
         self.dir = "./J2mag_results_"+self.data_type
         if not os.path.exists(self.dir):
@@ -263,6 +311,9 @@ class mag_compute:
                 self._fourier_transform("path")
                 self._magnon_energies("path")
                 self._write("path")
+        if self.compute_magnon_thermo:
+            self._compute_thermo()
+            self._write("thermo")
 
 
     def _write(self, type_write):
@@ -312,5 +363,42 @@ class mag_compute:
                                  for j in range(np.shape(J)[0]):
                                      if not((i == j) and (Rx == 0 and Ry == 0 and Rz == 0)):
                                         f.write(f"{i:d} {j:d} {Rx:d} {Ry:d} {Rz:d} {J[i, j] * 1000:6.5f}"+"\n")
+
+
+        elif type_write == "thermo":
+            with open(self.dir+"/thermo.dat", "w") as f:
+                    f.write(f"T (K)\tU (meV)\tF (meV\tS (meV/K)\tC (meV/K))\n")
+                    for i in range(len(self.interval_T)):
+                        output = f"{self.interval_T[i]:9.6f}\t"
+                        for j in range(4):
+                            output += f"{self.thermo_quant[i, j]:9.6f}\t"
+                        output += "\n"
+                        f.write(output)
+            #plot U
+            plt.xlabel("T (K)")
+            plt.ylabel("U (meV)")
+            plt.plot(self.interval_T, self.thermo_quant[:, 0])
+            plt.savefig(self.dir+"/U.png", dpi=300)
+            plt.clf()
+            #plot F
+            plt.xlabel("T (K)")
+            plt.ylabel("F (meV)")
+            plt.plot(self.interval_T, self.thermo_quant[:, 1])
+            plt.savefig(self.dir+"/F.png", dpi=300)
+            plt.clf()
+            #plot S
+            plt.xlabel("T (K)")
+            plt.ylabel("S (meV$\cdot$K$^{-1}$)")
+            plt.plot(self.interval_T, self.thermo_quant[:, 2])
+            plt.savefig(self.dir+"/S.png", dpi=300)
+            plt.clf()
+            #plot C
+            plt.xlabel("T (K)")
+            plt.ylabel("$C_Vm$ (meV$\cdot$K$^{-1}$)")
+            plt.plot(self.interval_T, self.thermo_quant[:, 3])
+            plt.savefig(self.dir+"/C_V.png", dpi=300)
+            plt.clf()
+
+
     
         
