@@ -388,13 +388,13 @@ class mag_compute:
             plt.clf()
             #plot S
             plt.xlabel("T (K)")
-            plt.ylabel("S (meV$\cdot$K$^{-1}$)")
+            plt.ylabel(f"S (meV$\times$K$^{-1}$)")
             plt.plot(self.interval_T, self.thermo_quant[:, 2])
             plt.savefig(self.dir+"/S.png", dpi=300)
             plt.clf()
             #plot C
             plt.xlabel("T (K)")
-            plt.ylabel("$C_Vm$ (meV$\cdot$K$^{-1}$)")
+            plt.ylabel(f"$C_Vm$ (meV$\times$K$^{-1}$)")
             plt.plot(self.interval_T, self.thermo_quant[:, 3])
             plt.savefig(self.dir+"/C_V.png", dpi=300)
             plt.clf()
