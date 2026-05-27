@@ -1,7 +1,7 @@
 import argparse
 
 def arg_parse():
-    parser = argparse.ArgumentParser(prog='J2mag', usage='%(prog)s [options]')
+    parser = argparse.ArgumentParser(prog='OstravaMag', usage='%(prog)s [options]')
     parser.add_argument('--max_R', nargs=3, type = int,  help='Maximal R to consider (default: 2,2,2)', default = [2, 2, 2])
     parser.add_argument('--directory_name', type = str,  help='Name of the directory with the input file (default: .)', default = ".")
     parser.add_argument('--root_name', type = str,  help='Root name of the output files the output file of OpenMX/GPAW (default: none)', default = "")
