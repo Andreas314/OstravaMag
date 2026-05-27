@@ -91,15 +91,3 @@ All output files are written to `OstravaMag_results_` with the suffix `--type`.
 | `magnon_dos.dat` | Magnon DOS as a function of energy |
 | `thermo.dat` | U, F, S, Cv as a function of temperature |
 | `magnons_on_grid.dat` | Magnon energies in each point of the *k*-grid|
-
-## Thermodynamic quantities
-
-Computed within the harmonic (LSWT) approximation via integration over the magnon DOS *g*(E):
-
-| Quantity | Formula |
-|---|---|| Internal energy | $U = \int g(E)\, E\left(\frac{1}{2} + n(E,T)\right) dE$ |
-| Free energy | $F = \int g(E)\left[\frac{E}{2} + k_BT \ln\!\left(1 - e^{-E/k_BT}\right)\right] dE$ |
-| Entropy | $S = k_B \int g(E)\left[\frac{x}{e^x - 1} - \ln\!\left(1 - e^{-x}\right)\right] dE$ |
-| Heat capacity | $C_v = k_B \int g(E)\, x^2\, n(E,T)\left[n(E,T)+1\right] dE$ |
-
-where $x = E / k_BT$ and $n(E,T) = 1/(e^x - 1)$ is the Bose-Einstein occupation.
