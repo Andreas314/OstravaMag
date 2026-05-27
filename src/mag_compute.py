@@ -285,7 +285,7 @@ class mag_compute:
             self.thermo_quant[i, 3] = kB * np.trapz(g * cv_term, dx=dE)
 
     def run_computations(self):
-        self.dir = "./J2mag_results_"+self.data_type
+        self.dir = "./OstravaMag_results_"+self.data_type
         if not os.path.exists(self.dir):
             os.makedirs(self.dir)
         self._compute_reciprocal()
