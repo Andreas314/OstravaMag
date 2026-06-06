@@ -233,17 +233,19 @@ class mag_compute:
         self.partial_magnon_dos = np.zeros(shape = (N, len(self.dos_E)), dtype = float) #magnon bands
         num_kpoints = np.shape(self.magnon_energies)[0]
         to_keep = np.arange(0, N)
+        real_branch = 0
         for branch in range(N):
             E_vals = np.real(self.magnon_energies[:, branch])
             imag = (np.imag(self.magnon_energies[:, branch]) > 1e-3)
-            if any(imag):
-                print("WARNING: " + str(sum(imag)) + " entries with non-zero imaginary component out of " + str(len(E_vals)))
             if all(E_vals > -1e-1):
-                 E_vals = E_vals[~imag]
-                 for i, E0 in enumerate(self.dos_E):
-                      self.partial_magnon_dos[branch][i] = np.sum(
-                          np.exp(-(E_vals  - E0)**2 / (2 * self.smearing**2))
-                        )
+                if any(imag):
+                    print(f"WARNING: {sum(imag)} entries with non-zero imaginary component out of {len(E_vals)} in branch {real_branch}")
+                real_branch += 1
+                E_vals = E_vals[~imag]
+                for i, E0 in enumerate(self.dos_E):
+                    self.partial_magnon_dos[branch][i] = np.sum(
+                        np.exp(-(E_vals  - E0)**2 / (2 * self.smearing**2))
+                    )
             else:
                 to_keep = np.delete(to_keep, np.argwhere(to_keep==branch))
             self.magnon_dos += self.partial_magnon_dos[branch]
