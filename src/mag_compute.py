@@ -306,7 +306,7 @@ class mag_compute:
             self.thermo_quant[i, 3] = kB * np.trapz(g * cv_term, dx=dE)
         N_avo = 6.02214076e23
         mEv_to_J =  1.60218e-22
-        self.thermo_quant *= mEv_to_J * N_avo #change units to J/mol
+        self.thermo_quant[:, 2:] *= mEv_to_J * N_avo #change units to J/mol
 
 
     def run_computations(self):
@@ -407,7 +407,7 @@ class mag_compute:
 
         elif type_write == "thermo":
             with open(self.dir+"/thermo.dat", "w") as f:
-                    f.write(f"T (K)\tU (J)\tF (J)\tS (J/K/mol)\tC (J/K/mol)\n")
+                    f.write(f"T (K)\tU (meV)\tF (meV)\tS (J/K/mol)\tC (J/K/mol)\n")
                     for i in range(len(self.interval_T)):
                         output = f"{self.interval_T[i]:9.6f}\t"
                         for j in range(4):
@@ -418,8 +418,8 @@ class mag_compute:
         fig.suptitle("Magnon Thermodynamic Quantities", fontsize=14)
         
         plots = [
-            (0, 0, r"U (J$\cdot$mol$^{-1}$)",                        "Internal Energy",  0),
-            (0, 1, r"F (J$\cdot$mol$^{-1}$)",                        "Free Energy",      1),
+            (0, 0, r"U (meV)",                        "Internal Energy",  0),
+            (0, 1, r"F (meV)",                        "Free Energy",      1),
             (1, 0, r"S (J$\cdot$K$^{-1}$$\cdot$mol$^{-1}$)",       "Entropy",          2),
             (1, 1, r"$C_V$ (J$\cdot$K$^{-1}$$\cdot$mol$^{-1}$)",   "Heat Capacity",    3),
         ]
