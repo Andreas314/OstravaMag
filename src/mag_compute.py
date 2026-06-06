@@ -227,24 +227,33 @@ class mag_compute:
         self.magnon_dos = np.zeros(shape = (len(self.dos_E)), dtype = float) #magnon bands
         ###
         J0 = self.Jq[0]
-        N = len(J0)
+        N = 2 * len(J0)
         ###
         #TODO declare this
-        self.partial_magnon_dos_total = np.zeros(shape = (N, len(self.dos_E)), dtype = float) #magnon bands
+        self.partial_magnon_dos = np.zeros(shape = (N, len(self.dos_E)), dtype = float) #magnon bands
         num_kpoints = np.shape(self.magnon_energies)[0]
-        E_vals = np.real(self.magnon_energies).flatten()
-        imag = (np.imag(self.magnon_energies).flatten() > 1e-3)
-        if any(imag):
-            print("WARNING: " + str(sum(imag)) + " entries with non-zero imaginary component out of " + str(len(E_vals)))
-        E_vals = E_vals[((E_vals > 1e-2) * (~imag))]
-        for i, E0 in enumerate(self.dos_E):
-            self.magnon_dos[i] = np.sum(
-                np.exp(-(E_vals  - E0)**2 / (2 * self.smearing**2))
-            )
+        to_keep = np.arange(0, N)
+        for branch in range(N):
+            E_vals = np.real(self.magnon_energies[:, branch])
+            imag = (np.imag(self.magnon_energies[:, branch]) > 1e-3)
+            if any(imag):
+                print("WARNING: " + str(sum(imag)) + " entries with non-zero imaginary component out of " + str(len(E_vals)))
+            if all(E_vals > -1e-1):
+                 E_vals = E_vals[~imag]
+                 for i, E0 in enumerate(self.dos_E):
+                      self.partial_magnon_dos[branch][i] = np.sum(
+                          np.exp(-(E_vals  - E0)**2 / (2 * self.smearing**2))
+                        )
+            else:
+                to_keep = np.delete(to_keep, np.argwhere(to_keep==branch))
+            self.magnon_dos += self.partial_magnon_dos[branch]
+        self.partial_magnon_dos = self.partial_magnon_dos[to_keep, :]
         #TODO declare this
         self.magnon_dos /= (self.smearing * np.sqrt(2 * np.pi)) * num_kpoints
+        self.partial_magnon_dos /= (self.smearing * np.sqrt(2 * np.pi)) * num_kpoints
         self.dos_normalization = np.trapz(self.magnon_dos* (self.dos_E[1] - self.dos_E[0]))
         self.magnon_dos /= self.dos_normalization
+        self.partial_magnon_dos /= self.dos_normalization
         print(f"Integral of total DOS: {self.dos_normalization}")
 
 
@@ -366,6 +375,21 @@ class mag_compute:
                                 number += f"\t{np.real(self.magnon_energies[i,band]):8.4f}"
                         f.write(f"{k[0]:8.5f}\t{k[1]:8.5f}\t{k[2]:8.5f}" + number +"\n")
                     f.write("\n")
+            #plot partial dos
+            plt.xlabel("E (meV)")
+            plt.ylabel("DOS (states/meV)")
+            for i in range(len(self.partial_magnon_dos)):
+                plt.plot(self.dos_E, self.partial_magnon_dos[i])
+            plt.savefig(self.dir+"/partial_magnon_dos.png", dpi=300)
+            plt.clf()
+            
+            with open(self.dir+"/partial_magnon_dos.dat", "w") as f:
+                for i, E0 in enumerate(self.dos_E):
+                    text = f"{E0:8.4f}" + "\t"
+                    for branch in range(len(self.partial_magnon_dos)):
+                        text += f"{self.partial_magnon_dos[branch][i]:8.7f}\t"
+                    text += "\n"
+                    f.write(text)
         elif type_write == "Jr":
             with open(self.dir + "/Jr_J2mag_GPAW.out", "w") as f:
                  f.write(f"i j Rx Ry Rz J_ij (meV)"+"\n")
