@@ -94,7 +94,8 @@ class mag_compute:
             for jj in range(num_points + 1):
                 #handle the lenght scale of the x axis
                 self.kpath_x = np.append(self.kpath_x, last)
-                last += np.dot(diff, diff)
+                if jj != num_points:
+                    last += np.dot(diff, diff)
                 #handle the actual path
                 index = int(ii / 2 * (num_points+1) + jj)
                 self.kpath[index] = begin + diff * jj

@@ -149,6 +149,12 @@ def read_OpenMX(data_name, max_R, structure_name, to_exclude):
                     if (parts[0] == "Elapsed"):
                         break
                     index = []
+                    flag = False
+                    for ii in range(2,5):
+                        if (abs(int(parts[ii])) > max_R[ii - 2]):
+                            flag = True
+                    if flag:
+                        continue
                     for ii in range(5):
                         if ii < 2:
                             index.append(int(parts[ii]))
