@@ -213,7 +213,7 @@ class mag_compute:
                     elif a >= Na and b < Na:
                         Hq[iq,a,b] += np.conj(Bq[iq,b,a - Na])
                     else:
-                        Hq[iq,a,b] += Aq[iq,b - Na,a - Na]
+                        Hq[iq,a,b] += (Aq[iq,b - Na,a - Na])
             Hq[iq,:,:] = np.dot(Sz,Hq[iq,:,:])
         E_qn, v_qan = np.linalg.eig(Hq)
         self.magnon_energies = np.zeros((Nq, 2 * Na),complex)
@@ -225,18 +225,28 @@ class mag_compute:
     def _compute_dos(self):
         self.dos_E = np.linspace(-3 * self.smearing, max(np.real(self.magnon_energies[:, -1])) + 3*self.smearing, self.n_points)
         self.magnon_dos = np.zeros(shape = (len(self.dos_E)), dtype = float) #magnon bands
+        ###
+        J0 = self.Jq[0]
+        N = len(J0)
+        ###
+        #TODO declare this
+        self.partial_magnon_dos_total = np.zeros(shape = (N, len(self.dos_E)), dtype = float) #magnon bands
         num_kpoints = np.shape(self.magnon_energies)[0]
         E_vals = np.real(self.magnon_energies).flatten()
         imag = (np.imag(self.magnon_energies).flatten() > 1e-3)
         if any(imag):
-            print("WARNING: " + str(sum(imag)) + " points with non-zero imaginary component")
-        E_vals = E_vals[((E_vals > 0.25) * (~imag))]
+            print("WARNING: " + str(sum(imag)) + " entries with non-zero imaginary component out of " + str(len(E_vals)))
+        E_vals = E_vals[((E_vals > 1e-2) * (~imag))]
         for i, E0 in enumerate(self.dos_E):
             self.magnon_dos[i] = np.sum(
                 np.exp(-(E_vals  - E0)**2 / (2 * self.smearing**2))
             )
+        #TODO declare this
         self.magnon_dos /= (self.smearing * np.sqrt(2 * np.pi)) * num_kpoints
-        self.magnon_dos /= np.trapz(self.magnon_dos* (self.dos_E[1] - self.dos_E[0]))
+        self.dos_normalization = np.trapz(self.magnon_dos* (self.dos_E[1] - self.dos_E[0]))
+        self.magnon_dos /= self.dos_normalization
+        print(f"Integral of total DOS: {self.dos_normalization}")
+
 
     def _compute_thermo(self):
         mask = self.dos_E >= 0
@@ -244,7 +254,7 @@ class mag_compute:
         self.magnon_dos = self.magnon_dos[mask]
         
         dE = self.dos_E[1] - self.dos_E[0]
-        g = self.magnon_dos
+        g = self.magnon_dos * self.dos_normalization #do not output per magnetic atom
         E = self.dos_E
         kB = self.K_B
     
@@ -283,6 +293,10 @@ class mag_compute:
             # avoids exp entirely — n already computed, and (n+1) is trivial
             cv_term = x_safe**2 * n * (n + 1.0)
             self.thermo_quant[i, 3] = kB * np.trapz(g * cv_term, dx=dE)
+        N_avo = 6.02214076e23
+        mEv_to_J =  1.60218e-22
+        self.thermo_quant *= mEv_to_J * N_avo #change units to J/mol
+
 
     def run_computations(self):
         self.dir = "./OstravaMag_results_"+self.data_type
@@ -367,7 +381,7 @@ class mag_compute:
 
         elif type_write == "thermo":
             with open(self.dir+"/thermo.dat", "w") as f:
-                    f.write(f"T (K)\tU (meV)\tF (meV)\tS (meV/K)\tC (meV/K)\n")
+                    f.write(f"T (K)\tU (J)\tF (J)\tS (J/K/mol)\tC (J/K/mol)\n")
                     for i in range(len(self.interval_T)):
                         output = f"{self.interval_T[i]:9.6f}\t"
                         for j in range(4):
@@ -378,10 +392,10 @@ class mag_compute:
         fig.suptitle("Magnon Thermodynamic Quantities", fontsize=14)
         
         plots = [
-            (0, 0, "U (meV)",                        "Internal Energy",  0),
-            (0, 1, "F (meV)",                        "Free Energy",      1),
-            (1, 0, f"S (meV$\times$K$^{-1}$)",       "Entropy",          2),
-            (1, 1, f"$C_V$ (meV$\times$K$^{-1}$)",   "Heat Capacity",    3),
+            (0, 0, r"U (J$\cdot$mol$^{-1}$)",                        "Internal Energy",  0),
+            (0, 1, r"F (J$\cdot$mol$^{-1}$)",                        "Free Energy",      1),
+            (1, 0, r"S (J$\cdot$K$^{-1}$$\cdot$mol$^{-1}$)",       "Entropy",          2),
+            (1, 1, r"$C_V$ (J$\cdot$K$^{-1}$$\cdot$mol$^{-1}$)",   "Heat Capacity",    3),
         ]
         
         for row, col, ylabel, title, idx in plots:
