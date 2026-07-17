@@ -2,10 +2,10 @@
 
 import numpy as np
 from arg_parse import arg_parse
-from mag_compute import mag_compute
+from calculation_control import calculation_control
 if __name__ == "__main__":
     arguments = arg_parse()
-    handle_comp = mag_compute(arguments) 
-    handle_comp.read()
-    handle_comp.run_computations()
+    handle_comp = calculation_control(arguments) 
+    handle_comp.read_data()
+    handle_comp.run_calculations()
 

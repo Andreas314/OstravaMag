@@ -4,14 +4,11 @@ import matplotlib.pyplot as plt
 import os
 from gpaw.response.heisenberg import get_q0_index
 class mag_compute:
+    
+
     def __init__(self, arguments):
         
         ### variables from the command line
-        ##switches
-        self.compute_magnon_bands = arguments.compute_magnon_bands
-        self.compute_magnon_dos = arguments.compute_magnon_dos
-        self.compute_magnon_thermo = arguments.compute_magnon_thermo
-        ##
         ##others
         self.max_R = arguments.max_R
         self.data_name = arguments.directory_name
@@ -54,7 +51,13 @@ class mag_compute:
         self.interval_T = np.linspace(0, self.max_T, self.num_T)
         self.thermo_quant = np.zeros(shape = (self.num_T, 4)) #Internal energy, Free energy, Entropy, Heat capacity
         self.K_B = 0.08617 #meV/K
-    def _compute_reciprocal(self):
+        
+        self.dir = "./OstravaMag_results_"+self.data_type
+        if not os.path.exists(self.dir):
+            os.makedirs(self.dir)
+
+
+    def _make_reciprocal(self):
         #function to compute the reciprocal basis
         a1, a2, a3 = self.cell
         volume = np.dot(a1, np.cross(a2, a3))
@@ -67,7 +70,8 @@ class mag_compute:
         b3 = 2 * np.pi * np.cross(a1, a2) / volume
         self.reciprocal = np.vstack((b1, b2, b3))
     
-    def _make_grid(self):
+    
+    def make_grid(self):
         #generate gamma centred kmesh
         self.k_grid = np.zeros( shape = (np.prod(np.array(self.k_grid_division)), 3), dtype = float)
         ii = 0
@@ -80,7 +84,8 @@ class mag_compute:
                     self.k_grid[ii] = vx + vy + vz
                     ii += 1
 
-    def _make_path(self, num_points, kpoints):
+    
+    def make_path(self, num_points, kpoints):
         #make the kpath from the input
         #also handles the thing about having the gamma point inside the path
         steps = len(kpoints)
@@ -110,17 +115,22 @@ class mag_compute:
             self.gamma = round((num_points + 1) * steps / 2)
             self.kpath = np.vstack((self.kpath, np.array([0,0,0])))
 
+
     def read(self):
         #reads from all the files
         if (self.data_type != "GPAW"):
             self.Jr, self.cell, self.magmoms = read_data(self.data_type, self.data_name, self.max_R, self.structure_name, self.to_exclude)
         else:
             self.Jq, self.k_grid, self.mag_elem_map, self.cell, self.magmoms = read_data(self.data_type, self.data_name, self.max_R, self.structure_name, self.to_exclude)
-        if self.compute_magnon_bands:
-            num_points, kpoints, self.letters = read_kpath(self.kpath_name)
-            self._make_path(num_points, kpoints)
+        self._make_reciprocal()
 
-    def _fourier_transform(self, _type):
+
+    def read_path(self):
+        num_points, kpoints, self.letters = read_kpath(self.kpath_name)
+        self.make_path(num_points, kpoints)
+
+
+    def make_fourier_transform(self, _type):
         if _type == "path":
             self.Jq = np.zeros(shape = (len(self.kpath), np.shape(self.Jr)[-1], np.shape(self.Jr)[-1]), dtype = complex)
             k_size = len(self.kpath)
@@ -145,7 +155,8 @@ class mag_compute:
                         #shift the indices so that they start in zero
                         self.Jq[q_ind] += self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] * np.exp(1j * np.dot(q_, R_))
 
-    def _inverse_fourier_transform(self):
+
+    def make_inverse_fourier_transform(self):
             x_size = 2 * self.max_R[0] + 1
             y_size = 2 * self.max_R[1] + 1
             z_size = 2 * self.max_R[2] + 1
@@ -162,7 +173,8 @@ class mag_compute:
                              tmp  +=  (self.Jq[q_ind]* np.exp(-1j * np.dot(q_, R_))) / len(self.k_grid)
                         self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] = np.real(tmp)
     
-    def _magnon_energies(self, _type):
+    
+    def compute_magnon_energies(self, _type):
         if _type == "path":
             q0 = self.gamma
             Nq = self.path_len
@@ -218,12 +230,14 @@ class mag_compute:
             Hq[iq,:,:] = np.dot(Sz,Hq[iq,:,:])
         E_qn, v_qan = np.linalg.eig(Hq)
         self.magnon_energies = np.zeros((Nq, 2 * Na),complex)
+        self.magnon_states = np.zeros((Nq, 2 * Na, 2 * Na),complex)
         for i in range(len(E_qn)):
-            #self.magnon_energies[i] = E_qn[i][np.real(E_qn[i]) >= -1e-2]
             self.magnon_energies[i] = E_qn[i][:]
+            self.magnon_states[i] = v_qan[i][:, :]
         self.magnon_energies = np.sort(self.magnon_energies, axis=1) * 1000
     
-    def _compute_dos(self):
+    
+    def compute_dos(self):
         self.dos_E = np.linspace(-3 * self.smearing, max(np.real(self.magnon_energies[:, -1])) + 3*self.smearing, self.n_points)
         self.magnon_dos = np.zeros(shape = (len(self.dos_E)), dtype = float) #magnon bands
         ###
@@ -237,12 +251,13 @@ class mag_compute:
         real_branch = 0
         for branch in range(N):
             E_vals = np.real(self.magnon_energies[:, branch])
-            imag = (np.imag(self.magnon_energies[:, branch]) > 1e-3)
+            imag = (np.imag(self.magnon_energies[:, branch]) > 1e-5)
             if all(E_vals > -1e-1):
                 if any(imag):
                     print(f"WARNING: {sum(imag)} entries with non-zero imaginary component out of {len(E_vals)} in branch {real_branch}")
                 real_branch += 1
                 E_vals = E_vals[~imag]
+                E_vals = E_vals[E_vals > 1e-2]
                 for i, E0 in enumerate(self.dos_E):
                     self.partial_magnon_dos[branch][i] = np.sum(
                         np.exp(-(E_vals  - E0)**2 / (2 * self.smearing**2))
@@ -260,7 +275,7 @@ class mag_compute:
         print(f"Integral of total DOS: {self.dos_normalization}")
 
 
-    def _compute_thermo(self):
+    def compute_thermo(self):
         mask = self.dos_E >= 0
         self.dos_E = self.dos_E[mask]
         self.magnon_dos = self.magnon_dos[mask]
@@ -309,40 +324,7 @@ class mag_compute:
         mEv_to_J =  1.60218e-22
         self.thermo_quant[:, 2:] *= mEv_to_J * N_avo #change units to J/mol
 
-
-    def run_computations(self):
-        self.dir = "./OstravaMag_results_"+self.data_type
-        if not os.path.exists(self.dir):
-            os.makedirs(self.dir)
-        self._compute_reciprocal()
-        if self.data_type != "GPAW":
-             if self.compute_magnon_bands:
-                 self._fourier_transform("path")
-                 self._magnon_energies("path")
-                 self._write("path")
-             if self.compute_magnon_dos:
-                 self._make_grid()
-                 self._fourier_transform("grid")
-                 self._magnon_energies("grid")
-                 self._compute_dos()
-                 self._write("grid")
-        else:
-            self._inverse_fourier_transform()
-            self._write("Jr")
-            if self.compute_magnon_dos:
-                self._magnon_energies("grid")
-                self._compute_dos()
-                self._write("grid")
-            if self.compute_magnon_bands:
-                self._fourier_transform("path")
-                self._magnon_energies("path")
-                self._write("path")
-        if self.compute_magnon_thermo:
-            self._compute_thermo()
-            self._write("thermo")
-
-
-    def _write(self, type_write):
+    def write(self, type_write):
         if type_write == "path":
             plt.xticks(self.letters_position, self.letters)
             plt.ylabel("E (meV)")
