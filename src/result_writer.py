@@ -108,7 +108,7 @@ class result_writer:
        
        for row, col, ylabel, title, idx in plots:
            ax = axes[row, col]
-           ax.plot(self.comp.interval_T, self.thermo_quant[:, idx])
+           ax.plot(self.comp.interval_T, self.comp.thermo_quant[:, idx])
            ax.set_xlabel("T (K)")
            ax.set_ylabel(ylabel)
            ax.set_title(title)

@@ -33,5 +33,5 @@ class calculation_control:
                 self.writer.write_tdos()
             if self.compute_magnon_thermo:
                 self.comp.compute_thermo()
-                self.comp.write("thermo")
+                self.writer.write_thermo()
     

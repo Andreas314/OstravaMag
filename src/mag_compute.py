@@ -8,8 +8,7 @@ class mag_compute:
 
     def __init__(self, arguments):
         
-        ### variables from the command line
-        ##others
+        ##input arguments
         self.max_R = arguments.max_R
         self.data_name = arguments.directory_name
         self.structure_name = arguments.root_name
@@ -22,7 +21,6 @@ class mag_compute:
         self.smearing = arguments.smearing
         self.k_grid_division = arguments.k_grid
         ##
-        ###
 
         ### variables related to the kpath
         self.kpath = np.array([])
