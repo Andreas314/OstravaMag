@@ -14,11 +14,9 @@ if __name__ == "__main__":
         num = handle_comp.make_directories_list()
         for i in range(num):
             current = handle_comp.advance()
-            try:
-                 handle_comp.read_data()
-                 handle_comp.run_calculations()
-                 energy = handle_comp.comp.thermo_quant[:, 1]
-            except:
-                print("Couldn't read from", current, ". Skipping!")
+            handle_comp.read_data()
+            handle_comp.run_calculations()
+            handle_comp.add_entries()
+        print(handle_comp.qha.F)
 
 

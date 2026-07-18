@@ -1,6 +1,7 @@
 
 from mag_compute import mag_compute
 from result_writer import result_writer
+from qha_compute import qha_compute
 import os
 
 class calculation_control:
@@ -45,8 +46,7 @@ class calculation_control_qha(calculation_control):
         self.data_type = arguments.type
         self.directory = arguments.directory_name_qha
         self.comp = mag_compute(arguments)
-        self.comp.set_up()
-        self.writer = result_writer(self.comp)
+        self.T_inf = (arguments.max_T, arguments.num_T)
 
  
     def make_directories_list(self):
@@ -54,11 +54,17 @@ class calculation_control_qha(calculation_control):
         for item in os.listdir(self.directory):
             if os.path.isdir(os.path.join(self.directory, item)):
                 self.subdirs.append(os.path.join(self.directory, item))
+        self.qha = qha_compute(len(self.subdirs), self.T_inf)
         return len(self.subdirs)
 
     def advance(self):
        current_dir = self.subdirs.pop()
        self.comp.data_name = current_dir
        self.comp.set_up()
-       self.writer.update()
+       self.writer = result_writer(self.comp)
        return current_dir
+    
+    def add_entries(self):
+       self.qha.add_energy(self.comp.thermo_quant[:, 1])
+       V = self.comp.compute_volume()
+       self.qha.add_volume(V)

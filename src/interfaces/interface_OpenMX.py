@@ -20,36 +20,39 @@ def read_OpenMX(data_name, max_R, structure_name, to_exclude):
                      switch = True
                 continue
             else:
-                if line.strip():
-                    parts = line.strip().split()
-                    if (parts[0] == "Elapsed"):
-                        break
-                    index = []
-                    flag = False
-                    for ii in range(2,5):
-                        if (abs(int(parts[ii])) > max_R[ii - 2]):
-                            flag = True
-                    if flag:
-                        continue
-                    for ii in range(5):
-                        if ii < 2:
-                            index.append(int(parts[ii]))
+                try:
+                    if line.strip():
+                        parts = line.strip().split()
+                        if (parts[0] == "Elapsed"):
+                            break
+                        index = []
+                        flag = False
+                        for ii in range(2,5):
+                            if (abs(int(parts[ii])) > max_R[ii - 2]):
+                                flag = True
+                        if flag:
+                            continue
+                        for ii in range(5):
+                            if ii < 2:
+                                index.append(int(parts[ii]))
+                            else:
+                                index.append(int(parts[ii]) + max_R[ii - 2])
+                        index = tuple(index)
+                        if (not (index[0] - 1 in mag_atoms)) or (not (index[1] - 1 in mag_atoms)):
+                            continue
+                        if not index in seen_elements:  
+                            elements += 1
+                            seen_elements.append(index)
+                            J_1 = np.where(mag_atoms == index[0] - 1)[0]
+                            J_2 = np.where(mag_atoms == index[1] - 1)[0]
+                            #match TB2J convention with signs and no self-interaction + 2*
+                            result[index[2], index[3], index[4], J_1, J_2] = 2 * float(parts[5])* np.sign(moments[J_1, 2]) * np.sign(moments[J_2, 2]) / 1000
+                            if (index[2] == max_R[0] and index[3] == max_R[1] and index[4] == max_R[2]) and (J_1 == J_2):
+                                result[index[2], index[3], index[4], J_1, J_2] = 0
                         else:
-                            index.append(int(parts[ii]) + max_R[ii - 2])
-                    index = tuple(index)
-                    if (not (index[0] - 1 in mag_atoms)) or (not (index[1] - 1 in mag_atoms)):
-                        continue
-                    if not index in seen_elements:  
-                        elements += 1
-                        seen_elements.append(index)
-                        J_1 = np.where(mag_atoms == index[0] - 1)[0]
-                        J_2 = np.where(mag_atoms == index[1] - 1)[0]
-                        #match TB2J convention with signs and no self-interaction + 2*
-                        result[index[2], index[3], index[4], J_1, J_2] = 2 * float(parts[5])* np.sign(moments[J_1, 2]) * np.sign(moments[J_2, 2]) / 1000
-                        if (index[2] == max_R[0] and index[3] == max_R[1] and index[4] == max_R[2]) and (J_1 == J_2):
-                            result[index[2], index[3], index[4], J_1, J_2] = 0
-                    else:
-                        print("Warning, element repeats at indices " + str(index))
+                            print("Warning, element repeats at indices " + str(index))
+                except ValueError:
+                    continue
         if elements != max_elements_count:
             raise RuntimeError("Wrong number of elements in the input file!")
         return result, cell, moments
@@ -124,12 +127,15 @@ def find_indices_OpenMX(data_name, to_exclude):
                      switch = True
                 continue
             else:
-                if line.strip():
-                    if not (int(parts[0]) - 1 in to_exclude or int(parts[1]) - 1 in to_exclude):
-                        left_indices.add(int(parts[0]) - 1)
-                        right_indices.add(int(parts[1]) - 1)
-                else:
-                    break
+                try:
+                    if line.strip():
+                        if not (int(parts[0]) - 1 in to_exclude or int(parts[1]) - 1 in to_exclude):
+                            left_indices.add(int(parts[0]) - 1)
+                            right_indices.add(int(parts[1]) - 1)
+                    else:
+                        break
+                except ValueError:
+                    continue
     if (left_indices == right_indices):
         indices = np.zeros(atoms, dtype = bool)
         for index in range(atoms):

@@ -69,7 +69,9 @@ class mag_compute:
     def read_path(self):
         num_points, kpoints, self.letters = self.reader.read_kpath()
         self.make_path(num_points, kpoints)
-
+    
+    def compute_volume(self):
+        return np.linalg.det(self.cell)
 
     def _make_reciprocal(self):
         #function to compute the reciprocal basis
