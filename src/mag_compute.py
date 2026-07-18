@@ -1,4 +1,4 @@
-from read_J import read_data, read_kpath
+from data_reader import data_reader
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -49,10 +49,25 @@ class mag_compute:
         self.interval_T = np.linspace(0, self.max_T, self.num_T)
         self.thermo_quant = np.zeros(shape = (self.num_T, 4)) #Internal energy, Free energy, Entropy, Heat capacity
         self.K_B = 0.08617 #meV/K
-        
+
+    def set_up(self):
         self.dir = "./OstravaMag_results_"+self.data_type
         if not os.path.exists(self.dir):
             os.makedirs(self.dir)
+        self.reader = data_reader(self.data_type, self.data_name, self.max_R, self.structure_name, self.to_exclude, self.kpath_name)
+
+    def read(self):
+        #reads from all the files
+        if (self.data_type != "GPAW"):
+            self.Jr, self.cell, self.magmoms = self.reader.read_data()
+        else:
+            self.Jq, self.k_grid, self.mag_elem_map, self.cell, self.magmoms = self.reader.read_data()
+        self._make_reciprocal()
+
+
+    def read_path(self):
+        num_points, kpoints, self.letters = self.reader.read_kpath()
+        self.make_path(num_points, kpoints)
 
 
     def _make_reciprocal(self):
@@ -112,20 +127,6 @@ class mag_compute:
         else:
             self.gamma = round((num_points + 1) * steps / 2)
             self.kpath = np.vstack((self.kpath, np.array([0,0,0])))
-
-
-    def read(self):
-        #reads from all the files
-        if (self.data_type != "GPAW"):
-            self.Jr, self.cell, self.magmoms = read_data(self.data_type, self.data_name, self.max_R, self.structure_name, self.to_exclude)
-        else:
-            self.Jq, self.k_grid, self.mag_elem_map, self.cell, self.magmoms = read_data(self.data_type, self.data_name, self.max_R, self.structure_name, self.to_exclude)
-        self._make_reciprocal()
-
-
-    def read_path(self):
-        num_points, kpoints, self.letters = read_kpath(self.kpath_name)
-        self.make_path(num_points, kpoints)
 
 
     def make_fourier_transform(self, _type):

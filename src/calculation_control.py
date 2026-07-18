@@ -8,6 +8,7 @@ class calculation_control:
         self.compute_magnon_thermo = arguments.compute_magnon_thermo
         self.data_type = arguments.type
         self.comp = mag_compute(arguments)
+        self.comp.set_up()
         self.writer = result_writer(self.comp)
 
     def read_data(self):
