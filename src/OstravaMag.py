@@ -2,10 +2,23 @@
 
 import numpy as np
 from arg_parse import arg_parse
-from calculation_control import calculation_control
+from calculation_control import calculation_control, calculation_control_qha
 if __name__ == "__main__":
     arguments = arg_parse()
-    handle_comp = calculation_control(arguments) 
-    handle_comp.read_data()
-    handle_comp.run_calculations()
+    if  not arguments.compute_qha:
+        handle_comp = calculation_control(arguments) 
+        handle_comp.read_data()
+        handle_comp.run_calculations()
+    else:
+        handle_comp = calculation_control_qha(arguments)
+        num = handle_comp.make_directories_list()
+        for i in range(num):
+            current = handle_comp.advance()
+            try:
+                 handle_comp.read_data()
+                 handle_comp.run_calculations()
+                 energy = handle_comp.comp.thermo_quant[:, 1]
+            except:
+                print("Couldn't read from", current, ". Skipping!")
+
 

@@ -16,7 +16,19 @@ class result_writer:
         self.thermo_plot = self.comp.dir + "/thermo.png"
         self.thermo_data = self.comp.dir + "/thermo.dat"
 
+    def update(self):
+        self.bands_plot = self.comp.dir + "/magnon_bands.png" 
+        self.bands_data = self.comp.dir + "/magnon_bands.dat"
+        self.tdos_plot = self.comp.dir + "/magnon_tdos.png"
+        self.tdos_data = self.comp.dir + "/magnon_tdos.dat"
+        self.pdos_plot = self.comp.dir + "/magnon_pdos.png"
+        self.pdos_data = self.comp.dir + "/magnon_pdos.dat"
+        self.energy_on_grid = self.comp.dir+"/energy_on_grid.dat"
+        self.J_data = self.comp.dir + "/Jr_J2mag_GPAW.out"
+        self.thermo_plot = self.comp.dir + "/thermo.png"
+        self.thermo_data = self.comp.dir + "/thermo.dat"
 
+ 
     def write_bands(self):
         plt.xticks(self.comp.letters_position, self.comp.letters)
         plt.ylabel("E (meV)")

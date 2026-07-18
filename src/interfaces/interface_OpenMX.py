@@ -96,7 +96,7 @@ def read_moments_OpenMX(structure_name, data_name, to_exclude):
                 if not line.strip():
                     moments = np.delete(moments, 0, axis = 0)
                     ###Find which indices are used in the J calculation
-                    indices = find_indices_OpenMX(data_name)
+                    indices = find_indices_OpenMX(data_name, to_exclude)
                     ###Filter the atoms
                     magnetic_atoms = find_non_mag(moments, indices, to_exclude)
                     moments = moments[magnetic_atoms]
@@ -107,7 +107,7 @@ def read_moments_OpenMX(structure_name, data_name, to_exclude):
                     moments = np.vstack((moments, np.array([ 0, 0, float(parts[5])])))
             ###
 
-def find_indices_OpenMX(data_name):
+def find_indices_OpenMX(data_name, to_exclude):
     switch = False
     left_indices = set([])
     right_indices = set([])
@@ -125,8 +125,9 @@ def find_indices_OpenMX(data_name):
                 continue
             else:
                 if line.strip():
-                    left_indices.add(int(parts[0]) - 1)
-                    right_indices.add(int(parts[1]) - 1)
+                    if not (int(parts[0]) - 1 in to_exclude or int(parts[1]) - 1 in to_exclude):
+                        left_indices.add(int(parts[0]) - 1)
+                        right_indices.add(int(parts[1]) - 1)
                 else:
                     break
     if (left_indices == right_indices):

@@ -51,7 +51,8 @@ class mag_compute:
         self.K_B = 0.08617 #meV/K
 
     def set_up(self):
-        self.dir = "./OstravaMag_results_"+self.data_type
+        self.dir = self.data_name+"/OstravaMag_results_"+self.data_type
+        print(self.dir)
         if not os.path.exists(self.dir):
             os.makedirs(self.dir)
         self.reader = data_reader(self.data_type, self.data_name, self.max_R, self.structure_name, self.to_exclude, self.kpath_name)

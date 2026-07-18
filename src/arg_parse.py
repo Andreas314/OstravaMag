@@ -16,6 +16,9 @@ def arg_parse():
     parser.add_argument('--max_T',  type = float,  help='Maximal temperature to calculatet he thermodynamical quantities (default: 300 K)', default = 300)
     parser.add_argument('--num_T',  type = int,  help='Number of points in the temperature interval (default: 300)', default = 300)
     parser.add_argument('--n_points', type = int,  help='Number of points in DOS (default: 50 meV)', default = 50)
+    #qha
+    parser.add_argument('--compute_qha', action = "store_true",  help='Turns on computation of the thermal properties in quasi-harmonic approximation' )
+    parser.add_argument('--directory_name_qha', type = str,  help='Name of the directory with the directories for the qha calculations (default: .)', default = ".")
     arguments = parser.parse_args()
     return arguments
 
