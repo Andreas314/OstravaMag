@@ -101,7 +101,7 @@ class result_writer:
              for Rx in range(-self.comp.max_R[0], self.comp.max_R[0] + 1):
                  for Ry in range(-self.comp.max_R[1], self.comp.max_R[1] + 1):
                      for Rz in range(-self.comp.max_R[2], self.comp.max_R[2] + 1):
-                         J = self.comp.Jr[Rx + self.comp.max_R[0], Ry + self.comp.max_R[1], Rz + self.comp.self.max_R[2]]
+                         J = self.comp.Jr[Rx + self.comp.max_R[0], Ry + self.comp.max_R[1], Rz + self.comp.max_R[2]]
                          for i in range(np.shape(J)[0]):
                              for j in range(np.shape(J)[0]):
                                  if not((i == j) and (Rx == 0 and Ry == 0 and Rz == 0)):

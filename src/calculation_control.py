@@ -24,11 +24,7 @@ class calculation_control:
     def run_calculations(self):
             if self.data_type == "GPAW":
                 self.comp.make_inverse_fourier_transform()
-                self.write.write_J()
-            if self.compute_magnon_bands:
-                self.comp.make_fourier_transform("path")
-                self.comp.compute_magnon_energies("path")
-                self.writer.write_bands()
+                self.writer.write_J()
             if self.compute_magnon_dos:
                 if self.data_type != "GPAW":
                     self.comp.make_grid()
@@ -43,6 +39,10 @@ class calculation_control:
             if self.compute_magnon_thermo:
                 self.comp.compute_thermo()
                 self.writer.write_thermo()
+            if self.compute_magnon_bands:
+                self.comp.make_fourier_transform("path")
+                self.comp.compute_magnon_energies("path")
+                self.writer.write_bands()
  
 class calculation_control_qha(calculation_control):
     def __init__(self, arguments):

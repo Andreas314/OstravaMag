@@ -2,6 +2,7 @@ from data_reader import data_reader
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import sys
 from gpaw.response.heisenberg import get_q0_index
 class mag_compute:
     
@@ -111,12 +112,13 @@ class mag_compute:
         for ii in range(0, steps, 2):
             begin = kpoints[ii]
             end = kpoints[ii + 1];
-            diff = (end - begin) / num_points
+            diff = ((end - begin) / num_points)
             for jj in range(num_points + 1):
                 #handle the lenght scale of the x axis
                 self.kpath_x = np.append(self.kpath_x, last)
                 if jj != num_points:
-                    last += np.dot(diff, diff)
+                    trans_diff = diff @ self.reciprocal.T
+                    last += np.dot(trans_diff, trans_diff)
                 #handle the actual path
                 index = int(ii / 2 * (num_points+1) + jj)
                 self.kpath[index] = begin + diff * jj
@@ -163,17 +165,16 @@ class mag_compute:
             y_size = 2 * self.max_R[1] + 1
             z_size = 2 * self.max_R[2] + 1
             self.Jr = np.zeros(shape = (x_size, y_size, z_size, np.shape(self.Jq)[-1], np.shape(self.Jq)[-1]), dtype = float)
+            q_cart = self.k_grid @ self.reciprocal   # shape (Nq, 3)
+            np.set_printoptions(threshold=sys.maxsize)
+            print(self.reciprocal)
             for Rx in range(-self.max_R[0], self.max_R[0] + 1):
                 for Ry in range(-self.max_R[1], self.max_R[1] + 1):
                     for Rz in range(-self.max_R[2], self.max_R[2] + 1):
-                        #computet he real space difference vector for the phase calculation
-                        R_ = np.dot(np.array([Rx, Ry, Rz]), self.cell)  
-                        #shift the indices so that they start in zero
-                        tmp = np.zeros(shape = (np.shape(self.Jq)[-1], np.shape(self.Jq)[-1]), dtype = complex)
-                        for q_ind, q in enumerate(self.k_grid):
-                             q_ = np.dot(q, self.reciprocal)
-                             tmp  +=  (self.Jq[q_ind]* np.exp(-1j * np.dot(q_, R_))) / len(self.k_grid)
-                        self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] = np.real(tmp)
+                        R_cart = np.array([Rx, Ry, Rz]) @ self.cell
+                        phases = np.exp(-1j * (q_cart @ R_cart))  # shape (Nq,)
+                        tmp = np.tensordot(phases, self.Jq, axes=(0, 0)) / len(self.k_grid)
+                        self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] = tmp
     
     
     def compute_magnon_energies(self, _type):
@@ -228,7 +229,7 @@ class mag_compute:
                     elif a >= Na and b < Na:
                         Hq[iq,a,b] += np.conj(Bq[iq,b,a - Na])
                     else:
-                        Hq[iq,a,b] += (Aq[iq,b - Na,a - Na])
+                        Hq[iq,a,b] += np.conj(Aq[iq,b - Na,a - Na])
             Hq[iq,:,:] = np.dot(Sz,Hq[iq,:,:])
         E_qn, v_qan = np.linalg.eig(Hq)
         self.magnon_energies = np.zeros((Nq, 2 * Na),complex)
@@ -314,9 +315,6 @@ class mag_compute:
         for atom in range(Nat):
             for i in range(len(self.dos_E)):
                 total[i] += self.projected_magnon_dos[atom][i]
-        print(total)
-        print(self.magnon_dos)
-
 
 
     def compute_thermo(self):
