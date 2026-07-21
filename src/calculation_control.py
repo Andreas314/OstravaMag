@@ -9,7 +9,9 @@ class calculation_control:
         self.compute_magnon_bands = arguments.compute_magnon_bands
         self.compute_magnon_dos = arguments.compute_magnon_dos
         self.compute_magnon_thermo = arguments.compute_magnon_thermo
+        self.compute_magnon_projected_dos = arguments.compute_magnon_projected_dos
         self.comp = mag_compute(arguments)
+        self.data_type = arguments.type
         self.comp.set_up()
         self.writer = result_writer(self.comp)
 
@@ -34,6 +36,9 @@ class calculation_control:
                 self.comp.compute_magnon_energies("grid")
                 self.comp.compute_dos()
                 self.writer.write_tdos()
+                if self.compute_magnon_projected_dos:
+                    self.comp.compute_projected_dos()
+                    self.writer.write_projected_dos()
             if self.compute_magnon_thermo:
                 self.comp.compute_thermo()
                 self.writer.write_thermo()

@@ -11,6 +11,8 @@ class result_writer:
         self.tdos_data = self.comp.dir + "/magnon_tdos.dat"
         self.pdos_plot = self.comp.dir + "/magnon_pdos.png"
         self.pdos_data = self.comp.dir + "/magnon_pdos.dat"
+        self.projected_dos_plot = self.comp.dir + "/magnon_projected_dos.png"
+        self.projected_dos_data = self.comp.dir + "/magnon_projected_dos.dat"
         self.energy_on_grid = self.comp.dir+"/energy_on_grid.dat"
         self.J_data = self.comp.dir + "/Jr_J2mag_GPAW.out"
         self.thermo_plot = self.comp.dir + "/thermo.png"
@@ -62,10 +64,10 @@ class result_writer:
         plt.ylabel("DOS (states/meV)")
         for i in range(len(self.comp.partial_magnon_dos)):
             plt.plot(self.comp.dos_E, self.comp.partial_magnon_dos[i])
-        plt.savefig(self.tdos_plot, dpi=300)
+        plt.savefig(self.pdos_plot, dpi=300)
         plt.clf()
         
-        with open(self.tdos_data, "w") as f:
+        with open(self.pdos_data, "w") as f:
             for i, E0 in enumerate(self.comp.dos_E):
                 text = f"{E0:8.4f}" + "\t"
                 for branch in range(len(self.comp.partial_magnon_dos)):
@@ -73,6 +75,25 @@ class result_writer:
                 text += "\n"
                 f.write(text)
 
+
+    def write_projected_dos(self):
+      plt.xlabel("E (meV)")
+      plt.ylabel("DOS (states/meV)")
+      for i in range(len(self.comp.projected_magnon_dos)):
+          plt.plot(self.comp.dos_E, self.comp.projected_magnon_dos[i], label = i)
+      plt.legend()
+      plt.savefig(self.projected_dos_plot, dpi=300)
+      plt.clf()
+      
+      with open(self.projected_dos_data, "w") as f:
+          for i, E0 in enumerate(self.comp.dos_E):
+              text = f"{E0:8.4f}" + "\t"
+              for atom in range(len(self.comp.projected_magnon_dos)):
+                  text += f"{self.comp.projected_magnon_dos[atom][i]:8.7f}\t"
+              text += "\n"
+              f.write(text)
+
+         
 
     def write_J(self):
         with open(self.J_data, "w") as f:
