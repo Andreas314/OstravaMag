@@ -38,12 +38,13 @@ def read_GPAW(data_name, structure_name, to_exclude):
     moments = moments[mag_elements]
     q_new = -q
     j_new = np.conj(jq)
-    q0 = get_q0_index(q)
-    q_new = np.delete(q_new, q0, axis = 0)
-    j_new = np.delete(j_new, q0, axis = 0)
     to_delete = []
+    for qq in range(len(q_new)): #make sure there are no duplicates
+        if q_new[qq, 2] == 0 or q_new[qq, 2] == -0.5:
+            to_delete.append(qq)
     q_new = np.delete(q_new, to_delete, axis = 0)
     j_new = np.delete(j_new, to_delete, axis = 0)
+    print(set(list(q_new[:, 2])))
     jq = np.vstack((jq, j_new))
     q = np.vstack((q, q_new))
     return jq, q, mag_elements, cell, moments
