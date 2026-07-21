@@ -36,6 +36,7 @@ class calculation_control:
                 self.comp.compute_magnon_energies("grid")
                 self.comp.compute_dos()
                 self.writer.write_tdos()
+                self.writer.write_pdos()
                 if self.compute_magnon_projected_dos:
                     self.comp.compute_projected_dos()
                     self.writer.write_projected_dos()
