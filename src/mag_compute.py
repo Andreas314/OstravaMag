@@ -236,6 +236,17 @@ class mag_compute:
         for i in range(len(E_qn)):
             self.magnon_energies[i] = E_qn[i][:]
             self.magnon_states[i] = v_qan[i][:, :]
+
+        # --- vector normalization in generelized eigenvalue problem
+        for branch in range(2*Na):
+            v = self.magnon_states[iq][:, branch]
+            eta_norm = np.real(np.conj(v) @ Sz @ v)
+            if abs(eta_norm) < 1e-8:
+                print(f"WARNING: near-zero eta-norm at iq={iq}, branch={branch}: {eta_norm}")
+                continue
+            v_normalized = v / np.sqrt(np.abs(eta_norm))
+            self.magnon_states[iq][:, branch] = v_normalized
+
         idx = np.argsort(self.magnon_energies, axis=1)
         self.magnon_energies = np.take_along_axis(self.magnon_energies, idx, axis=1) * 1000
         for i in range(len(E_qn)):
@@ -296,8 +307,8 @@ class mag_compute:
                     for i, E0 in enumerate(self.dos_E):
                         for kpoint in range(num_kpoints):
                             if E_vals[kpoint] > 1e-2 and not imag[kpoint]:
-                                self.projected_magnon_dos[atom % 2][i] += np.real(
-                                np.abs(self.magnon_states[kpoint][atom][branch])**2 *
+                                self.projected_magnon_dos[atom % Nat][i] += np.real(
+                                np.abs(self.magnon_states[kpoint][branch][atom])**2 *
                                 np.exp(-(E_vals[kpoint]  - E0)**2 / (2 * self.smearing**2)))
         self.projected_magnon_dos /= (self.smearing * np.sqrt(2 * np.pi)) * num_kpoints * self.dos_normalization
         for atom in range(Nat):
