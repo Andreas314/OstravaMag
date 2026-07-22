@@ -1,4 +1,4 @@
-from data_reader import data_reader
+from src.data_reader import data_reader
 import numpy as np
 import matplotlib.pyplot as plt
 import os

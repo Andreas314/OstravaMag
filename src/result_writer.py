@@ -1,4 +1,4 @@
-from mag_compute import mag_compute
+from src.mag_compute import mag_compute
 import matplotlib.pyplot as plt
 import numpy as np
 

@@ -2,9 +2,9 @@ import pickle
 import numpy as np
 import os
 from gpaw.response.heisenberg import get_q0_index
-from interfaces.interface_TB2J import read_TB2J
-from interfaces.interface_OpenMX import read_OpenMX
-from interfaces.interface_GPAW import read_GPAW
+from src.interfaces.interface_TB2J import read_TB2J
+from src.interfaces.interface_OpenMX import read_OpenMX
+from src.interfaces.interface_GPAW import read_GPAW
 
 class data_reader:
 

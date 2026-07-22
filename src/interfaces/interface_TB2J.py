@@ -1,7 +1,7 @@
 import pickle
 import numpy as np
 import os
-from interfaces.common import find_non_mag
+from src.interfaces.common import find_non_mag
 
 def read_TB2J(data_name, max_R, to_exclude):
     print("Reading data from: " + data_name + "/TB2J.pickle")

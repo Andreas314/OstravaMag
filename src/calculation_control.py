@@ -1,7 +1,7 @@
 
-from mag_compute import mag_compute
-from result_writer import result_writer
-from qha_compute import qha_compute
+from src.mag_compute import mag_compute
+from src.result_writer import result_writer
+from src.qha_compute import qha_compute
 import os
 
 class calculation_control:

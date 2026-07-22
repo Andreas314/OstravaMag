@@ -1,5 +1,5 @@
 import numpy as np
-from interfaces.common import find_non_mag
+from src.interfaces.common import find_non_mag
 from gpaw.response.heisenberg import get_q0_index
 
 def read_GPAW(data_name, structure_name, to_exclude):

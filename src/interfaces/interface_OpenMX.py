@@ -1,5 +1,5 @@
 import numpy as np
-from interfaces.common import find_non_mag
+from src.interfaces.common import find_non_mag
 
 def read_OpenMX(data_name, max_R, structure_name, to_exclude):
     moments, mag_atoms = read_moments_OpenMX(structure_name, data_name, to_exclude)

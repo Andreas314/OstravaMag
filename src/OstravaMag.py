@@ -1,9 +1,9 @@
 #!/bin/env python3
 
 import numpy as np
-from arg_parse import arg_parse
-from calculation_control import calculation_control, calculation_control_qha
-if __name__ == "__main__":
+from src.arg_parse import arg_parse
+from src.calculation_control import calculation_control, calculation_control_qha
+def OstravaMag():
     arguments = arg_parse()
     if  not arguments.compute_qha:
         handle_comp = calculation_control(arguments) 
@@ -19,4 +19,5 @@ if __name__ == "__main__":
             handle_comp.add_entries()
         print(handle_comp.qha.F)
 
-
+if __name__ == "__main__":
+    OstravaMag()
