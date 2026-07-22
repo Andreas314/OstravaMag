@@ -5,6 +5,7 @@ from gpaw.response.heisenberg import get_q0_index
 from src.interfaces.interface_TB2J import read_TB2J
 from src.interfaces.interface_OpenMX import read_OpenMX
 from src.interfaces.interface_GPAW import read_GPAW
+from src.interfaces.interface_KKR import read_KKR
 
 class data_reader:
 
@@ -61,6 +62,8 @@ class data_reader:
             result = read_TB2J(self.data_name, self.max_R, self.to_exclude)
         elif (self.data_type == "OpenMX"):
             result = read_OpenMX(self.data_name, self.max_R, self.structure_name, self.to_exclude)
+        elif (self.data_type == "KKR"):
+            result = read_KKR(self.data_name,self.max_R,  self.structure_name, self.to_exclude)
         elif (self.data_type == "GPAW"):
             result = read_GPAW(self.data_name, self.structure_name, self.to_exclude)
         else:
