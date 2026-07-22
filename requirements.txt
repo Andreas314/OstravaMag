@@ -1,0 +1,3 @@
+gpaw==25.7.0
+matplotlib==3.11.1
+numpy==2.5.1
