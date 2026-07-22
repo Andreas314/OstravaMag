@@ -44,7 +44,6 @@ def read_GPAW(data_name, structure_name, to_exclude):
             to_delete.append(qq)
     q_new = np.delete(q_new, to_delete, axis = 0)
     j_new = np.delete(j_new, to_delete, axis = 0)
-    print(set(list(q_new[:, 2])))
     jq = np.vstack((jq, j_new))
     q = np.vstack((q, q_new))
     return jq, q, mag_elements, cell, moments
