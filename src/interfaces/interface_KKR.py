@@ -11,6 +11,7 @@ def read_KKR(data_name, max_R, structure_name, to_exclude):
     result = np.zeros(shape=(R_size_x, R_size_y, R_size_z, J_size, J_size), dtype=float, order='C')
     switch = False
     elements = 0
+    seen_elements = set()
     with open(data_name + "/" + structure_name + "_JXC_XCPLTEN_Jij.dat", "r") as f:
         for line in f:
             if not switch:
@@ -45,15 +46,18 @@ def read_KKR(data_name, max_R, structure_name, to_exclude):
             raise RuntimeError("Wrong number of elements in the input file (wrong cut-off?)!")
         return result, cell, moments
 
+
 def read_structure_KKR(structure_name, data_name, to_exclude):
     #Reads structural input from the *.out file
     BOHR =  5.29177E-1
     cell = np.zeros(shape = (3,3), dtype = float)
     print("Reading structure from: " + data_name + "/" + structure_name + ".pot")
     moments = []
+    types = []
     with open(data_name + "/" + structure_name + ".pot", "r") as f:
         for line in f:
             words = line.strip().split()
+            
             if words[0] == "ALAT":
                 const = float(words[1]) * BOHR
                 for ii in range(3):
@@ -61,21 +65,39 @@ def read_structure_KKR(structure_name, data_name, to_exclude):
                     next_words = next_line.strip().split()
                     for jj in range(1, 4):
                         cell[ii][jj - 1] = float(next_words[jj]) * const
-            if words[0] == "MOMENTS":
+            
+            if words[0] == "OCCUPATION":
                 next(f)
                 while True:
                     next_line = next(f)
                     next_words = next_line.strip().split()
-                    if "".join(set(next_words[0])) == "=":
-                        moments = np.array(moments)
+                    if "".join(set(next_words[0])) == "*":
                         break
-                    moment = float(next_words[2])
-                    moments.append([0, 0, moment])
+                    types.append(int(next_words[1]))
+
+            if words[0] == "MOMENTS":
+                mom_dic = {}
+                moments = []
+                while True:
+                    try:
+                        next_words = next(f).strip().split()
+                        mag_type = int(next_words[1])
+                        next_line = next(f)
+                        next_words = next_line.strip().split()
+                        moment = float(next_words[2])
+                        mom_dic[mag_type]= [0, 0, moment]
+                        next(f)
+                    except StopIteration:
+                        break
+                for t in types:
+                    moments.append(mom_dic[t])
+                moments = np.array(moments)
     indices = find_indices_KKR(structure_name, data_name, to_exclude)
     mag_atoms = find_non_mag(moments, indices, to_exclude)
     moments = moments[mag_atoms]
     return cell, moments, mag_atoms
     
+
 
 def find_indices_KKR(structure_name, data_name, to_exclude):
     left_indices = []
@@ -95,6 +117,5 @@ def find_indices_KKR(structure_name, data_name, to_exclude):
     if set(left_indices) != set(right_indices):
         raise RuntimeError("Some elements are missing! (i indices are different then j indices in jx the file)")
     return left_indices
-
 
                     
