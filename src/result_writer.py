@@ -14,7 +14,7 @@ class result_writer:
         self.projected_dos_plot = self.comp.dir + "/magnon_projected_dos.png"
         self.projected_dos_data = self.comp.dir + "/magnon_projected_dos.dat"
         self.energy_on_grid = self.comp.dir+"/energy_on_grid.dat"
-        self.J_data = self.comp.dir + "/Jr_J2mag_GPAW.out"
+        self.J_data = self.comp.dir + "/Jr_GPAW.dat"
         self.thermo_plot = self.comp.dir + "/thermo.png"
         self.thermo_data = self.comp.dir + "/thermo.dat"
 
