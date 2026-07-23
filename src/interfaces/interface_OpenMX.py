@@ -55,7 +55,7 @@ def read_OpenMX(data_name, max_R, structure_name, to_exclude):
                     continue
         if elements != max_elements_count:
             raise RuntimeError("Wrong number of elements in the input file!")
-        return result, cell, moments
+        return result, cell, moments, mag_atoms
 
 def read_cell_OpenMX(data_name, structure_name):
     #Reads structural input from the *.out file

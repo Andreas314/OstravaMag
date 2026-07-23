@@ -80,7 +80,7 @@ class result_writer:
       plt.xlabel("E (meV)")
       plt.ylabel("DOS (states/meV)")
       for i in range(len(self.comp.projected_magnon_dos)):
-          plt.plot(self.comp.dos_E, self.comp.projected_magnon_dos[i], label = i)
+          plt.plot(self.comp.dos_E, self.comp.projected_magnon_dos[i], label = self.comp.mag_elem_map[i])
       plt.legend()
       plt.savefig(self.projected_dos_plot, dpi=300)
       plt.clf()

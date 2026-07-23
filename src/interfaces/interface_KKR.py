@@ -44,7 +44,7 @@ def read_KKR(data_name, max_R, structure_name, to_exclude):
                 elements += 1
         if elements != max_elements_count:
             raise RuntimeError("Wrong number of elements in the input file (wrong cut-off?)!")
-        return result, cell, moments
+        return result, cell, moments, mag_atoms
 
 
 def read_structure_KKR(structure_name, data_name, to_exclude):

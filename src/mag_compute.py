@@ -61,7 +61,7 @@ class mag_compute:
     def read(self):
         #reads from all the files
         if (self.data_type != "GPAW"):
-            self.Jr, self.cell, self.magmoms = self.reader.read_data()
+            self.Jr, self.cell, self.magmoms, self.mag_elem_map = self.reader.read_data()
         else:
             self.Jq, self.k_grid, self.mag_elem_map, self.cell, self.magmoms = self.reader.read_data()
         self._make_reciprocal()
@@ -241,9 +241,6 @@ class mag_compute:
         for branch in range(2*Na):
             v = self.magnon_states[iq][:, branch]
             eta_norm = np.real(np.conj(v) @ Sz @ v)
-            if abs(eta_norm) < 1e-8:
-                print(f"WARNING: near-zero eta-norm at iq={iq}, branch={branch}: {eta_norm}")
-                continue
             v_normalized = v / np.sqrt(np.abs(eta_norm))
             self.magnon_states[iq][:, branch] = v_normalized
 
@@ -251,7 +248,7 @@ class mag_compute:
         self.magnon_energies = np.take_along_axis(self.magnon_energies, idx, axis=1) * 1000
         for i in range(len(E_qn)):
             self.magnon_states[i] = self.magnon_states[i][:, idx[i]]
-    
+
     def compute_dos(self):
         self.dos_E = np.linspace(-3 * self.smearing, max(np.real(self.magnon_energies[:, -1])) + 3*self.smearing, self.n_points)
         self.magnon_dos = np.zeros(shape = (len(self.dos_E)), dtype = float) #magnon bands
@@ -288,32 +285,58 @@ class mag_compute:
         self.partial_magnon_dos /= self.dos_normalization
         print(f"Integral of total DOS: {self.dos_normalization}")
 
+
     def compute_projected_dos(self):
-        self.dos_E = np.linspace(-3 * self.smearing, max(np.real(self.magnon_energies[:, -1])) + 3*self.smearing, self.n_points)
-        ###
+        self.dos_E = np.linspace(
+            -3 * self.smearing,
+            max(np.real(self.magnon_energies[:, -1])) + 3 * self.smearing,
+            self.n_points
+        )
+    
         J0 = self.Jq[0]
-        N = 2 * len(J0)
         Nat = len(J0)
-        ###
-        self.projected_magnon_dos = np.zeros(shape = (Nat, len(self.dos_E)), dtype = float) #atomic bands
-        total = np.zeros(shape = (len(self.dos_E)), dtype = float) #atomic bands
-        num_kpoints = np.shape(self.magnon_energies)[0]
-        real_branch = 0
+        N = 2 * Nat
+    
+        num_kpoints = self.magnon_energies.shape[0]
+    
+        self.projected_magnon_dos = np.zeros((Nat, len(self.dos_E)), dtype=float)
+    
         for branch in range(N):
             E_vals = np.real(self.magnon_energies[:, branch])
-            imag = (np.imag(self.magnon_energies[:, branch]) > 1e-5)
-            if all(E_vals > -1e-1):
-                for atom in range(N):
-                    for i, E0 in enumerate(self.dos_E):
-                        for kpoint in range(num_kpoints):
-                            if E_vals[kpoint] > 1e-2 and not imag[kpoint]:
-                                self.projected_magnon_dos[atom % Nat][i] += np.real(
-                                np.abs(self.magnon_states[kpoint][branch][atom])**2 *
-                                np.exp(-(E_vals[kpoint]  - E0)**2 / (2 * self.smearing**2)))
-        self.projected_magnon_dos /= (self.smearing * np.sqrt(2 * np.pi)) * num_kpoints * self.dos_normalization
-        for atom in range(Nat):
-            for i in range(len(self.dos_E)):
-                total[i] += self.projected_magnon_dos[atom][i]
+            imag_mask = np.imag(self.magnon_energies[:, branch]) > 1e-5
+    
+            # Filter valid k-points
+            valid_mask = (E_vals > 1e-2) & (~imag_mask)
+    
+            if not np.all(E_vals > -1e-1):
+                continue
+    
+            E_valid = E_vals[valid_mask]  # shape (K,)
+            if E_valid.size == 0:
+                continue
+    
+            # Gaussian broadening: shape (K, n_points)
+            diff = E_valid[:, None] - self.dos_E[None, :]
+            gauss = np.exp(-(diff**2) / (2 * self.smearing**2))
+    
+            # Get magnon states: shape (K, N)
+            states = np.abs(
+                    self.magnon_states[valid_mask, :,  branch]
+            )**2  # (K, N)
+    
+            # Fold atoms into Nat using modulo
+            for atom in range(N):
+                self.projected_magnon_dos[atom % Nat] += (
+                    states[:, atom][:, None] * gauss
+                ).sum(axis=0)
+    
+        # Normalization
+        self.projected_magnon_dos /= (
+            self.smearing * np.sqrt(2 * np.pi) * num_kpoints * self.dos_normalization
+        )
+    
+        # Total DOS
+        total = self.projected_magnon_dos.sum(axis=0)    
 
 
     def compute_thermo(self):
