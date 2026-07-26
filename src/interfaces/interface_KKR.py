@@ -11,7 +11,7 @@ def read_KKR(data_name, max_R, structure_name, to_exclude):
     result = np.zeros(shape=(R_size_x, R_size_y, R_size_z, J_size, J_size), dtype=float, order='C')
     switch = False
     elements = 0
-    seen_elements = set()
+    indices = []
     with open(data_name + "/" + structure_name + "_JXC_XCPLTEN_Jij.dat", "r") as f:
         for line in f:
             if not switch:
@@ -33,13 +33,15 @@ def read_KKR(data_name, max_R, structure_name, to_exclude):
                 R3 += max_R[2]
                 i = int(words[1])
                 j = int(words[3])
+                if (i - 1 not in mag_atoms) or (j - 1 not in mag_atoms):
+                    continue
                 index = (i, j, R1, R2, R3)
+                indices.append(index)
                 J_1 = np.where(mag_atoms == index[0] - 1)[0]
                 J_2 = np.where(mag_atoms == index[1] - 1)[0]
                 Jxx = float(words[11])
                 Jyy = float(words[12])
                 J = (Jxx + Jyy) / 2
-                #match TB2J convention with signs and no self-interaction + 2*
                 result[index[2], index[3], index[4], J_1, J_2] = J / 1000 * 2
                 elements += 1
         if elements != max_elements_count:
