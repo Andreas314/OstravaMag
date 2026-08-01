@@ -1,4 +1,5 @@
 from src.mag_compute import mag_compute
+from src.interfaces.J_writers import write_J_OpenMX
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -14,7 +15,7 @@ class result_writer:
         self.projected_dos_plot = self.comp.dir + "/magnon_projected_dos.png"
         self.projected_dos_data = self.comp.dir + "/magnon_projected_dos.dat"
         self.energy_on_grid = self.comp.dir+"/energy_on_grid.dat"
-        self.J_data = self.comp.dir + "/Jr_GPAW.dat"
+        self.J_data = self.comp.dir + "/Jr.dat"
         self.thermo_plot = self.comp.dir + "/thermo.png"
         self.thermo_data = self.comp.dir + "/thermo.dat"
 
@@ -96,16 +97,10 @@ class result_writer:
          
 
     def write_J(self):
-        with open(self.J_data, "w") as f:
-             f.write(f"i j Rx Ry Rz J_ij (meV)"+"\n")
-             for Rx in range(-self.comp.max_R[0], self.comp.max_R[0] + 1):
-                 for Ry in range(-self.comp.max_R[1], self.comp.max_R[1] + 1):
-                     for Rz in range(-self.comp.max_R[2], self.comp.max_R[2] + 1):
-                         J = self.comp.Jr[Rx + self.comp.max_R[0], Ry + self.comp.max_R[1], Rz + self.comp.max_R[2]]
-                         for i in range(np.shape(J)[0]):
-                             for j in range(np.shape(J)[0]):
-                                 if not((i == j) and (Rx == 0 and Ry == 0 and Rz == 0)):
-                                    f.write(f"{i:d} {j:d} {Rx:d} {Ry:d} {Rz:d} {J[i, j] * 1000:6.5f}"+"\n")
+        if self.comp.data_type == "OpenMX":
+            write_J_OpenMX(self.comp.data_name, self.comp.structure_name, self.J_data)
+        else:
+            pass
 
 
     def write_thermo(self):
