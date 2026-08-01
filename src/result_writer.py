@@ -1,5 +1,5 @@
 from src.mag_compute import mag_compute
-from src.interfaces.J_writers import write_J_OpenMX
+from src.interfaces.J_writers import write_J_OpenMX, write_J_GPAW
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -98,7 +98,9 @@ class result_writer:
 
     def write_J(self):
         if self.comp.data_type == "OpenMX":
-            write_J_OpenMX(self.comp.data_name, self.comp.structure_name, self.J_data)
+            write_J_OpenMX(self.comp.data_name, self.comp.structure_name, self.J_data, self.comp.mag_elem_map)
+        elif self.comp.data_type == "GPAW":
+            write_J_GPAW(self.comp.data_name, self.comp.structure_name, self.J_data, self.comp.Jr, self.comp.max_R, self.comp.cell, self.comp.mag_elem_map)
         else:
             pass
 

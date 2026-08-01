@@ -2,7 +2,50 @@
 import numpy as np
 import sys
 
-def write_J_OpenMX(location, structure, output):
+def write_J_GPAW(location, structure, output, Jr, max_R, lattice, mag_elem):
+    positions = []
+    labels = []
+    with open(location + "/" + structure + ".txt", "r") as f:
+        for line in f:
+            if line.startswith("Positions:"):
+                while True:
+                    line = next(f)
+                    if not line.split():
+                        break
+                    else:
+                        words = line.strip().split()
+                        if int(words[0]) in mag_elem:
+                            coords = [0] * 3
+                            for ii in range(3):
+                                coords[ii] = float(words[2 + ii])
+                            positions.append(np.array(coords))
+                            labels.append(words[1] + words[0])
+    N = len(positions)
+    js = []
+    for ii in range(N):
+        for jj in range(N):
+            for Rx in range(-max_R[0], max_R[0] + 1):
+                for Ry in range(-max_R[1], max_R[1] + 1):
+                    for Rz in range(-max_R[2], max_R[2] + 1):
+                        new_line = [0]*5
+                        J_iso = Jr[Rx + max_R[0], Ry + max_R[1], Rz + max_R[2], ii, jj] * 1000
+                        R = (Rx, Ry, Rz)
+                        distance_cell = np.matmul(np.transpose(lattice), R)
+                        new_line[0] = labels[ii]
+                        new_line[1] = labels[jj]
+                        new_line[2] = J_iso
+                        new_line[4] = R
+                        distance_cell = np.matmul(np.transpose(lattice), R)
+                        distance_atom = positions[jj] - positions[ii]
+                        distance = (distance_cell + distance_atom)
+                        new_line[3] = np.linalg.norm(distance)
+                        if new_line[3] != 0:
+                            js.append(new_line)
+    js.sort(key=lambda x: x[3])
+    final_write(output, lattice, N, labels, positions, js)
+
+
+def write_J_OpenMX(location, structure, output, mag_elem):
     #read the positions of the atoms inside the cell + lattice vectors    
     open_block_0 = "<Atoms.SpeciesAndCoordinates"
     close_block_0 = "Atoms.SpeciesAndCoordinates>"
@@ -79,6 +122,8 @@ def write_J_OpenMX(location, structure, output):
                     j = int(word[1]) -1 
                 except ValueError:
                     continue
+                if i not in mag_elem or j not in mag_elem:
+                    continue
                 new_line[0] = labels[i]
                 new_line[1] = labels[j]
                 new_line[2] = float(word[5])
@@ -92,14 +137,14 @@ def write_J_OpenMX(location, structure, output):
                 if new_line[3] != 0:
                     js.append(new_line)
     js.sort(key=lambda x: x[3])
+    final_write(output, lattice, bumber, labels, positions, js)
+
+def final_write(output, lattice, bumber, labels, positions, js):
     #go from relative to absolute positions
     with open(output, "w") as f:
         f.write("Lattice:"+"\n")
         f.write(str(lattice)+"\n")
-        f.write("Positions relative:"+"\n")
-        for i in range(bumber):
-            f.write(str(labels[i]) + " " + str(positions[i])+"\n")
-        f.write("Positions absolute:"+"\n")
+        f.write("Positions:"+"\n")
         for i in range(bumber):
             f.write(str(labels[i]) + " " + str(positions[i])+"\n")
         #go through the js
