@@ -12,12 +12,13 @@ def OstravaMag():
     else:
         handle_comp = calculation_control_qha(arguments)
         num = handle_comp.make_directories_list()
+        handle_comp.get_tot_energies()
         for i in range(num):
             current = handle_comp.advance()
             handle_comp.read_data()
             handle_comp.run_calculations()
             handle_comp.add_entries()
-        print(handle_comp.qha.F)
+        handle_comp.run_qha_calculation()
 
 if __name__ == "__main__":
     OstravaMag()

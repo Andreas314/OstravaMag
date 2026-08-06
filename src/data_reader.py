@@ -56,7 +56,7 @@ class data_reader:
         return num_points, kpath, new_letters
     
 
-    def read_data(self,):
+    def read_data(self):
         print("Data format: " + self.data_type)
         if (self.data_type == "TB2J"):
             result = read_TB2J(self.data_name, self.max_R, self.to_exclude)
@@ -69,4 +69,14 @@ class data_reader:
         else:
             raise ValueError("Unknown data type " + self.data_type +"!")
         return result
-
+    
+    def read_qha_energies(self):
+        energies = []
+        with open(self.data_name + "/" + "OstravaMag_qha.txt") as f:
+            for line in f:
+                try:
+                    words = line.strip().split()
+                    energies.append(float(words[0]))
+                except ValueError:
+                    print("Warning: An entry in the OstravaMag_qha.txt file cannot be converted to a float!")
+        return energies

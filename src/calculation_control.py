@@ -49,11 +49,16 @@ class calculation_control_qha(calculation_control):
         self.compute_magnon_bands = False
         self.compute_magnon_dos = True
         self.compute_magnon_thermo = True
+        self.compute_magnon_projected_dos = False
         self.data_type = arguments.type
         self.directory = arguments.directory_name_qha
         self.comp = mag_compute(arguments)
         self.T_inf = (arguments.max_T, arguments.num_T)
 
+    def get_tot_energies(self):
+        self.comp.data_name = self.directory
+        self.comp.set_up()
+        self.qha.add_tot_energies(self.comp.reader.read_qha_energies())
  
     def make_directories_list(self):
         self.subdirs = []
@@ -74,3 +79,9 @@ class calculation_control_qha(calculation_control):
        self.qha.add_energy(self.comp.thermo_quant[:, 1])
        V = self.comp.compute_volume()
        self.qha.add_volume(V)
+
+    def run_qha_calculation(self):
+        self.qha.sort_arrays()
+        self.qha.sum_contributions()
+        self.qha.find_minima()
+

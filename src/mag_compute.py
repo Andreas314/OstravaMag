@@ -54,8 +54,6 @@ class mag_compute:
     def set_up(self):
         self.dir = self.data_name+"/OstravaMag_results_"+self.data_type
         print(self.dir)
-        if not os.path.exists(self.dir):
-            os.makedirs(self.dir)
         self.reader = data_reader(self.data_type, self.data_name, self.max_R, self.structure_name, self.to_exclude, self.kpath_name)
 
     def read(self):
@@ -65,6 +63,8 @@ class mag_compute:
         else:
             self.Jq, self.k_grid, self.mag_elem_map, self.cell, self.magmoms = self.reader.read_data()
         self._make_reciprocal()
+        if not os.path.exists(self.dir):
+            os.makedirs(self.dir)
 
 
     def read_path(self):
