@@ -5,6 +5,8 @@ from src.qha_compute import qha_compute
 from src.tp_compute import tp_compute
 import os
 
+specials = ["GPAW"]
+
 class calculation_control:
     def __init__(self, arguments):
         self.compute_magnon_bands = arguments.compute_magnon_bands
@@ -16,7 +18,6 @@ class calculation_control:
         self.comp.set_up()
         self.writer = result_writer(self.comp)
         self.tc = tp_compute(arguments.epsilon, arguments.max_it, arguments.tol)
-        specials = ["GPAW"]
         data_type = arguments.type
         self.special = data_type in specials
     def read_data(self):
@@ -73,10 +74,13 @@ class calculation_control_qha(calculation_control):
         self.compute_magnon_dos = True
         self.compute_magnon_thermo = True
         self.compute_magnon_projected_dos = False
-        self.data_type = arguments.type
+        self.compute_tc = False
         self.directory = arguments.directory_name_qha
         self.comp = mag_compute(arguments)
         self.T_inf = (arguments.max_T, arguments.num_T)
+        data_type = arguments.type
+        self.special = data_type in specials
+        self.res_name = "OstravaMag_results_qha"
 
     def get_tot_energies(self):
         self.comp.data_name = self.directory
@@ -86,6 +90,8 @@ class calculation_control_qha(calculation_control):
     def make_directories_list(self):
         self.subdirs = []
         for item in os.listdir(self.directory):
+            if item == self.res_name:
+                continue
             if os.path.isdir(os.path.join(self.directory, item)):
                 self.subdirs.append(os.path.join(self.directory, item))
         self.qha = qha_compute(len(self.subdirs), self.T_inf)
@@ -103,8 +109,9 @@ class calculation_control_qha(calculation_control):
        V = self.comp.compute_volume()
        self.qha.add_volume(V)
 
-    def run_qha_calculation(self):
-        self.qha.sort_arrays()
-        self.qha.sum_contributions()
-        self.qha.find_minima()
+    def run_qha(self):
+        self.qha.run_calculation()
+        if not os.path.exists(self.directory + self.res_name):
+            os.makedirs(self.directory + self.res_name)
+        self.qha.write_results(self.directory + self.res_name)
 

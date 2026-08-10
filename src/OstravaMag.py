@@ -18,7 +18,7 @@ def OstravaMag():
             handle_comp.read_data()
             handle_comp.run_calculations()
             handle_comp.add_entries()
-        handle_comp.run_qha_calculation()
+        handle_comp.run_qha()
 
 if __name__ == "__main__":
     OstravaMag()
