@@ -20,6 +20,11 @@ def arg_parse():
     #qha
     parser.add_argument('--compute_qha', action = "store_true",  help='Turns on computation of the thermal properties in quasi-harmonic approximation (not working yet)' )
     parser.add_argument('--directory_name_qha', type = str,  help='Name of the directory with the directories for the qha calculations (default: .)', default = ".")
+    #critical temperature
+    parser.add_argument('--compute_tc', action = "store_true",  help='Turns on computation of the critical temperature' )
+    parser.add_argument('--epsilon', type = float,  help='The epsilon parameter inside the RPA calculation (default: 0.1 K)', default = 0.1)
+    parser.add_argument('--tol', type = float,  help='The minimal error tolerance of the RPA calculation (default: 1e-8)', default = 1e-8)
+    parser.add_argument('--max_it', type = int,  help='The maximum number of iterations of the RPA calculation (default: 100)', default = 100)
     arguments = parser.parse_args()
     return arguments
 

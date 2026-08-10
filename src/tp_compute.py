@@ -5,7 +5,12 @@ kB = 8.617333252e-5 #meV/K
 
 class tp_compute:
     
-    def __init__(self, Jq, magmoms, k_grid):
+    def __init__(self, epsilon, max_it, error_min):
+        self.epsilon = epsilon * kB
+        self.max_it = max_it
+        self.error_min = error_min
+
+    def set_exchange(self, Jq, magmoms, k_grid):
         self.Jq = Jq / 2
         self.magmoms = abs(magmoms[:, 2])
         E = np.outer(1 / self.magmoms, 1 / self.magmoms)
@@ -17,10 +22,6 @@ class tp_compute:
         self.J0 = self.Jq[self.q0]
         self.Na = len(self.J0)
         
-        self.epsilon = 0.3 * kB
-        self.it_max = 1000
-        self.error_min = 1e-8
-
     def _compute_MFA(self):
         D = 2.0 * self.magmoms * (self.magmoms + 1.0) / 3.0 * np.eye(self.Na)
     
@@ -38,7 +39,6 @@ class tp_compute:
         self.Tc_mfa = Tc_mfa
     
     def _integral_at_shift(self, s, z):
-        """Evaluate BZ-averaged diagonal of [N(q) + z*I]^{-1}, for complex shift z."""
         diag_part = (self.J0 @ s) * np.eye(self.Na)
         if self.Na != 1:
             rest_part = s[None, :, None] * self.Jq
@@ -68,7 +68,7 @@ class tp_compute:
         s_old = self.v_mfa
         it = 0
         error = 1
-        while error > self.error_min and it < self.it_max:
+        while error > self.error_min and it < self.max_it:
             it += 1
             s_new = self._run_iteration(s_old)
             norm_last = np.linalg.norm(s_new)

@@ -11,10 +11,12 @@ class calculation_control:
         self.compute_magnon_dos = arguments.compute_magnon_dos
         self.compute_magnon_thermo = arguments.compute_magnon_thermo
         self.compute_magnon_projected_dos = arguments.compute_magnon_projected_dos
+        self.compute_tc = arguments.compute_tc
         self.comp = mag_compute(arguments)
         self.data_type = arguments.type
         self.comp.set_up()
         self.writer = result_writer(self.comp)
+        self.tc = tp_compute(arguments.epsilon, arguments.max_it, arguments.tol)
 
     def read_data(self):
         self.comp.read()
@@ -36,9 +38,13 @@ class calculation_control:
                 if self.compute_magnon_projected_dos:
                     self.comp.compute_projected_dos()
                     self.writer.write_projected_dos()
-                tp = tp_compute(self.comp.Jq, self.comp.magmoms, self.comp.k_grid)
-                tp.calculate()
-                tp.print_results()
+            if self.compute_tc:
+                if not self.compute_magnon_dos and self.data_type != "GPAW":
+                    self.comp.make_grid()
+                    self.comp.make_fourier_transform("grid")
+                self.tc.set_exchange(self.comp.Jq, self.comp.magmoms, self.comp.k_grid)
+                self.tc.calculate()
+                self.tc.print_results()
             if self.compute_magnon_thermo:
                 self.comp.compute_thermo()
                 self.writer.write_thermo()
