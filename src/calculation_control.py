@@ -2,6 +2,7 @@
 from src.mag_compute import mag_compute
 from src.result_writer import result_writer
 from src.qha_compute import qha_compute
+from src.tp_compute import tp_compute
 import os
 
 class calculation_control:
@@ -35,6 +36,8 @@ class calculation_control:
                 if self.compute_magnon_projected_dos:
                     self.comp.compute_projected_dos()
                     self.writer.write_projected_dos()
+                tp = tp_compute(self.comp.Jq, self.comp.magmoms, self.comp.k_grid)
+                tp.compute_MFA()
             if self.compute_magnon_thermo:
                 self.comp.compute_thermo()
                 self.writer.write_thermo()
