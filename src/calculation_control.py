@@ -13,46 +13,59 @@ class calculation_control:
         self.compute_magnon_projected_dos = arguments.compute_magnon_projected_dos
         self.compute_tc = arguments.compute_tc
         self.comp = mag_compute(arguments)
-        self.data_type = arguments.type
         self.comp.set_up()
         self.writer = result_writer(self.comp)
         self.tc = tp_compute(arguments.epsilon, arguments.max_it, arguments.tol)
-
+        specials = ["GPAW"]
+        data_type = arguments.type
+        self.special = data_type in specials
     def read_data(self):
         self.comp.read()
         if self.compute_magnon_bands:
             self.comp.read_path()
+    
 
+    def _run_tc_calc(self):
+        if self.compute_tc:
+            if not self.compute_magnon_dos and not self.special:
+                self.comp.make_grid()
+                self.comp.make_fourier_transform("grid")
+            self.tc.set_exchange(self.comp.Jq, self.comp.magmoms, self.comp.k_grid)
+            self.tc.calculate()
+            self.tc.print_results()
 
-    def run_calculations(self):
-            if self.data_type == "GPAW":
-                self.comp.make_inverse_fourier_transform()
-            if self.compute_magnon_dos:
-                if self.data_type != "GPAW":
-                    self.comp.make_grid()
-                    self.comp.make_fourier_transform("grid")
-                self.comp.compute_magnon_energies("grid")
-                self.comp.compute_dos()
-                self.writer.write_tdos()
-                self.writer.write_pdos()
-                if self.compute_magnon_projected_dos:
-                    self.comp.compute_projected_dos()
-                    self.writer.write_projected_dos()
-            if self.compute_tc:
-                if not self.compute_magnon_dos and self.data_type != "GPAW":
-                    self.comp.make_grid()
-                    self.comp.make_fourier_transform("grid")
-                self.tc.set_exchange(self.comp.Jq, self.comp.magmoms, self.comp.k_grid)
-                self.tc.calculate()
-                self.tc.print_results()
+    def _run_dos_calc(self):
+        if self.compute_magnon_dos:
+            if not self.special:
+                self.comp.make_grid()
+                self.comp.make_fourier_transform("grid")
+            self.comp.compute_magnon_energies("grid")
+            self.comp.compute_dos()
+            self.writer.write_tdos()
+            self.writer.write_pdos()
+            if self.compute_magnon_projected_dos:
+                self.comp.compute_projected_dos()
+                self.writer.write_projected_dos()
             if self.compute_magnon_thermo:
                 self.comp.compute_thermo()
                 self.writer.write_thermo()
-            if self.compute_magnon_bands:
-                self.comp.make_fourier_transform("path")
-                self.comp.compute_magnon_energies("path")
-                self.writer.write_bands()
-            self.writer.write_J()
+
+    def _run_ift(self):
+        if self.data_type == "GPAW":
+            self.comp.make_inverse_fourier_transform()
+        self.writer.write_J()
+
+    def _run_band_calc(self):
+        if self.compute_magnon_bands:
+            self.comp.make_fourier_transform("path")
+            self.comp.compute_magnon_energies("path")
+            self.writer.write_bands()
+
+    def run_calculations(self):
+            self._run_ift
+            self._run_dos_calc()
+            self._run_tc_calc()
+            self._run_band_calc()
  
 class calculation_control_qha(calculation_control):
     def __init__(self, arguments):
