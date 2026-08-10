@@ -37,7 +37,8 @@ class calculation_control:
                     self.comp.compute_projected_dos()
                     self.writer.write_projected_dos()
                 tp = tp_compute(self.comp.Jq, self.comp.magmoms, self.comp.k_grid)
-                tp.compute_MFA()
+                tp.calculate()
+                tp.print_results()
             if self.compute_magnon_thermo:
                 self.comp.compute_thermo()
                 self.writer.write_thermo()
