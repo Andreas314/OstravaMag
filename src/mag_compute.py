@@ -134,48 +134,93 @@ class mag_compute:
             self.kpath = np.vstack((self.kpath, np.array([0,0,0])))
 
 
+#    def make_fourier_transform(self, _type):
+#        if _type == "path":
+#            self.Jq = np.zeros(shape = (len(self.kpath), np.shape(self.Jr)[-1], np.shape(self.Jr)[-1]), dtype = complex)
+#            k_size = len(self.kpath)
+#        elif _type == "grid":
+#            self.Jq = np.zeros(shape = (len(self.k_grid), np.shape(self.Jr)[-1], np.shape(self.Jr)[-1]), dtype = complex)
+#            k_size = len(self.k_grid)
+#        else:
+#            return 0
+#        for q_ind in range(k_size):
+#            q = 0
+#            if _type == "path":
+#                q = self.kpath[q_ind]
+#            else:
+#                q = self.k_grid[q_ind]
+#            #computet he reciprocal vector for the phase calculation
+#            q_ = np.dot(q, self.reciprocal.T)
+#            for Rx in range(-self.max_R[0], self.max_R[0] + 1):
+#                for Ry in range(-self.max_R[1], self.max_R[1] + 1):
+#                    for Rz in range(-self.max_R[2], self.max_R[2] + 1):
+#                        #computet he real space difference vector for the phase calculation
+#                        R_ = np.dot(np.array([Rx, Ry, Rz]), self.cell.T)  
+#                        #shift the indices so that they start in zero
+#                        self.Jq[q_ind] += self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] * np.exp(1j * np.dot(q_, R_))
+#
+#
+#    def make_inverse_fourier_transform(self):
+#            x_size = 2 * self.max_R[0] + 1
+#            y_size = 2 * self.max_R[1] + 1
+#            z_size = 2 * self.max_R[2] + 1
+#            self.Jr = np.zeros(shape = (x_size, y_size, z_size, np.shape(self.Jq)[-1], np.shape(self.Jq)[-1]), dtype = float)
+#            q_cart = self.k_grid @ self.reciprocal   # shape (Nq, 3)
+#            np.set_printoptions(threshold=sys.maxsize)
+#            for Rx in range(-self.max_R[0], self.max_R[0] + 1):
+#                for Ry in range(-self.max_R[1], self.max_R[1] + 1):
+#                    for Rz in range(-self.max_R[2], self.max_R[2] + 1):
+#                        R_cart = np.array([Rx, Ry, Rz]) @ self.cell
+#                        phases = np.exp(-1j * (q_cart @ R_cart))  # shape (Nq,)
+#                        tmp = np.tensordot(phases, self.Jq, axes=(0, 0)) / len(self.k_grid)
+#                        self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] = np.real(tmp)
+
     def make_fourier_transform(self, _type):
         if _type == "path":
-            self.Jq = np.zeros(shape = (len(self.kpath), np.shape(self.Jr)[-1], np.shape(self.Jr)[-1]), dtype = complex)
-            k_size = len(self.kpath)
+            k_points = self.kpath
         elif _type == "grid":
-            self.Jq = np.zeros(shape = (len(self.k_grid), np.shape(self.Jr)[-1], np.shape(self.Jr)[-1]), dtype = complex)
-            k_size = len(self.k_grid)
+            k_points = self.k_grid
         else:
             return 0
-        for q_ind in range(k_size):
-            q = 0
-            if _type == "path":
-                q = self.kpath[q_ind]
-            else:
-                q = self.k_grid[q_ind]
-            #computet he reciprocal vector for the phase calculation
-            q_ = np.dot(q, self.reciprocal.T)
-            for Rx in range(-self.max_R[0], self.max_R[0] + 1):
-                for Ry in range(-self.max_R[1], self.max_R[1] + 1):
-                    for Rz in range(-self.max_R[2], self.max_R[2] + 1):
-                        #computet he real space difference vector for the phase calculation
-                        R_ = np.dot(np.array([Rx, Ry, Rz]), self.cell.T)  
-                        #shift the indices so that they start in zero
-                        self.Jq[q_ind] += self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] * np.exp(1j * np.dot(q_, R_))
-
-
+    
+        n = np.shape(self.Jr)[-1]
+    
+        Rx_range = np.arange(-self.max_R[0], self.max_R[0] + 1)
+        Ry_range = np.arange(-self.max_R[1], self.max_R[1] + 1)
+        Rz_range = np.arange(-self.max_R[2], self.max_R[2] + 1)
+        Rx_g, Ry_g, Rz_g = np.meshgrid(Rx_range, Ry_range, Rz_range, indexing='ij')
+        R_int = np.stack([Rx_g.ravel(), Ry_g.ravel(), Rz_g.ravel()], axis=-1)
+        R_cart = R_int @ self.cell.T
+    
+        q_cart = np.asarray(k_points) @ self.reciprocal.T
+        phases = np.exp(1j * (q_cart @ R_cart.T))
+    
+        Jr_flat = self.Jr.reshape(-1, n, n)
+        self.Jq = np.tensordot(phases, Jr_flat, axes=(1, 0)).astype(complex)
+    
+    
     def make_inverse_fourier_transform(self):
-            x_size = 2 * self.max_R[0] + 1
-            y_size = 2 * self.max_R[1] + 1
-            z_size = 2 * self.max_R[2] + 1
-            self.Jr = np.zeros(shape = (x_size, y_size, z_size, np.shape(self.Jq)[-1], np.shape(self.Jq)[-1]), dtype = float)
-            q_cart = self.k_grid @ self.reciprocal   # shape (Nq, 3)
-            np.set_printoptions(threshold=sys.maxsize)
-            for Rx in range(-self.max_R[0], self.max_R[0] + 1):
-                for Ry in range(-self.max_R[1], self.max_R[1] + 1):
-                    for Rz in range(-self.max_R[2], self.max_R[2] + 1):
-                        R_cart = np.array([Rx, Ry, Rz]) @ self.cell
-                        phases = np.exp(-1j * (q_cart @ R_cart))  # shape (Nq,)
-                        tmp = np.tensordot(phases, self.Jq, axes=(0, 0)) / len(self.k_grid)
-                        self.Jr[Rx + self.max_R[0], Ry + self.max_R[1], Rz +self.max_R[2]] = np.real(tmp)
+        x_size = 2 * self.max_R[0] + 1
+        y_size = 2 * self.max_R[1] + 1
+        z_size = 2 * self.max_R[2] + 1
+        n = np.shape(self.Jq)[-1]
+        
+        Rx_range = np.arange(-self.max_R[0], self.max_R[0] + 1)
+        Ry_range = np.arange(-self.max_R[1], self.max_R[1] + 1)
+        Rz_range = np.arange(-self.max_R[2], self.max_R[2] + 1)
+        Rx_g, Ry_g, Rz_g = np.meshgrid(Rx_range, Ry_range, Rz_range, indexing='ij')
+        R_int = np.stack([Rx_g.ravel(), Ry_g.ravel(), Rz_g.ravel()], axis=-1)
+        R_cart = R_int @ self.cell
+        
+        q_cart = self.k_grid @ self.reciprocal
+        phases = np.exp(-1j * (R_cart @ q_cart.T))
+        
+        tmp = np.tensordot(phases, self.Jq, axes=(1, 0)) / len(self.k_grid)
+        self.Jr = np.real(tmp).reshape(x_size, y_size, z_size, n, n)
+        np.fill_diagonal(self.Jr[self.max_R[0], self.max_R[1], self.max_R[2],:,:], 0)
+        #print(self.Jr[self.max_R[0], self.max_R[1], self.max_R[2],:,:])
     
-    
+        
     def compute_magnon_energies(self, _type):
         if _type == "path":
             q0 = self.gamma

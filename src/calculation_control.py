@@ -39,7 +39,7 @@ class calculation_control:
         if self.compute_magnon_dos:
             if not self.special:
                 self.comp.make_grid()
-                self.comp.make_fourier_transform("grid")
+            self.comp.make_fourier_transform("grid")
             self.comp.compute_magnon_energies("grid")
             self.comp.compute_dos()
             self.writer.write_tdos()
