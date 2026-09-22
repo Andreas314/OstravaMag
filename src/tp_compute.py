@@ -11,10 +11,8 @@ class tp_compute:
         self.error_min = error_min
 
     def set_exchange(self, Jq, magmoms, k_grid):
+        #Equation A3 shows that we do not need to transform the elements of Jq
         self.Jq = Jq / 2
-        self.magmoms = abs(magmoms[:, 2])
-        E = np.outer( np.sign(self.magmoms), np.sign(self.magmoms))
-        self.Jq *= E
 
         self.k_grid = k_grid
         self.q0 = get_q0_index(self.k_grid)
@@ -59,7 +57,7 @@ class tp_compute:
         integral = 4*f_ieps - f_2ieps - f_eps_ieps - f_meps_ieps
         integral = integral.real   # discard small numerical imaginary residue
     
-        end_iteration = 2 / 3 / integral
+        end_iteration =  2 / 3 / integral
         return end_iteration
 
     def calculate(self):
@@ -67,13 +65,14 @@ class tp_compute:
         s_old = self.v_mfa
         it = 0
         error = 1
+        norm_last = 0
         while error > self.error_min and it < self.max_it:
             it += 1
             s_new = self._run_iteration(s_old)
-            norm_last = np.linalg.norm(s_new)
+            norm_new = np.linalg.norm(s_new)
             s_new /= norm_last
-            error = np.linalg.norm(s_new - s_old)
-            s_old = s_new
+            error = abs(norm_new - norm_last)
+            norm_last = norm_new
         self.error = error
         self.iterations = it
         self.Tc_rpa = norm_last / kB

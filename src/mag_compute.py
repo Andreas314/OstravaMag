@@ -218,7 +218,6 @@ class mag_compute:
         tmp = np.tensordot(phases, self.Jq, axes=(1, 0)) / len(self.k_grid)
         self.Jr = np.real(tmp).reshape(x_size, y_size, z_size, n, n)
         np.fill_diagonal(self.Jr[self.max_R[0], self.max_R[1], self.max_R[2],:,:], 0)
-        #print(self.Jr[self.max_R[0], self.max_R[1], self.max_R[2],:,:])
     
         
     def compute_magnon_energies(self, _type):
