@@ -46,4 +46,8 @@ def read_GPAW(data_name, structure_name, to_exclude):
     j_new = np.delete(j_new, to_delete, axis = 0)
     jq = np.vstack((jq, j_new))
     q = np.vstack((q, q_new))
+    #Fix the sign convention
+    E = np.outer(np.sign(moments[:, -1]), np.sign(moments[:, -1]))
+    jq = jq * E
+
     return jq, q, mag_elements, cell, moments

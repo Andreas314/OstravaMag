@@ -30,7 +30,7 @@ def read_TB2J(data_name, max_R, to_exclude):
                         key = ((R_x, R_y, R_z), J_x, J_y)
                         index = get_index(R_x, R_y, R_z, max_R)
                         if key in data['exchange_Jdict'].keys():
-                            result[index[0], index[1], index[2], J_1, J_2] = 2 * data['exchange_Jdict'][key]
+                            result[index[0], index[1], index[2], J_1, J_2] = 2 * data['exchange_Jdict'][key] * np.sign(moments[J_1, 2]) * np.sign(moments[J_2, 2])
     return result, cell, moments, magnetic_atoms
 
 def get_index(R_x, R_y, R_z, max_R):
