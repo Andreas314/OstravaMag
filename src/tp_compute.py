@@ -70,7 +70,7 @@ class tp_compute:
             it += 1
             s_new = self._run_iteration(s_old)
             norm_new = np.linalg.norm(s_new)
-            s_new /= norm_last
+            s_old = s_new / norm_new
             error = abs(norm_new - norm_last)
             norm_last = norm_new
         self.error = error
