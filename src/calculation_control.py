@@ -52,7 +52,7 @@ class calculation_control:
                 self.writer.write_thermo()
 
     def _run_ift(self):
-        if self.data_type == "GPAW":
+        if self.comp.data_type == "GPAW":
             self.comp.make_inverse_fourier_transform()
         self.writer.write_J()
 
@@ -63,7 +63,7 @@ class calculation_control:
             self.writer.write_bands()
 
     def run_calculations(self):
-            self._run_ift
+            self._run_ift()
             self._run_dos_calc()
             self._run_tc_calc()
             self._run_band_calc()
