@@ -13,7 +13,7 @@ class tp_compute:
     def set_exchange(self, Jq, magmoms, k_grid):
         self.Jq = Jq / 2
         self.magmoms = abs(magmoms[:, 2])
-        E = np.outer(1 / self.magmoms, 1 / self.magmoms)
+        E = np.outer( np.sign(self.magmoms), np.sign(self.magmoms))
         self.Jq *= E
 
         self.k_grid = k_grid
@@ -23,16 +23,15 @@ class tp_compute:
         self.Na = len(self.J0)
         
     def _compute_MFA(self):
-        D = 2.0 * self.magmoms * (self.magmoms + 1.0) / 3.0 * np.eye(self.Na)
     
-        H = D @ self.J0
+        H = self.J0
 
         eigvals, eigvecs = np.linalg.eigh(H)
     
         idx = np.argmax(eigvals)
-        Tc_mfa = eigvals[idx] / kB   # kB in meV/K, J0 assumed in meV -> T in K
+        Tc_mfa = eigvals[idx] / kB * 2 / 3
         
-        v = eigvecs[:, idx] @ D
+        v = eigvecs[:, idx]
         v_mfa = v / np.linalg.norm(v)
     
         self.v_mfa = v_mfa
@@ -48,7 +47,7 @@ class tp_compute:
             rest_part = s * self.Jq
             N = diag_part - rest_part + z * np.eye(self.Na)
             integrant = 1 / N
-        return integrant.sum(axis=0) / self.Nq   # shape (Na,)
+        return integrant.sum(axis=0) / self.Nq
     
     def _run_iteration(self, s):
         eps = self.epsilon
@@ -60,7 +59,7 @@ class tp_compute:
         integral = 4*f_ieps - f_2ieps - f_eps_ieps - f_meps_ieps
         integral = integral.real   # discard small numerical imaginary residue
     
-        end_iteration = 2 * (self.magmoms + 1) * self.magmoms / 3 / integral
+        end_iteration = 2 / 3 / integral
         return end_iteration
 
     def calculate(self):
