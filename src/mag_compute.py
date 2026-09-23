@@ -389,7 +389,7 @@ class mag_compute:
         self.magnon_dos = self.magnon_dos[mask]
         
         dE = self.dos_E[1] - self.dos_E[0]
-        g = self.magnon_dos * self.dos_normalization #do not output per magnetic atom
+        g = self.magnon_dos * self.dos_normalization / len(self.magmoms[:, 2])
         E = self.dos_E
         kB = self.K_B
     
