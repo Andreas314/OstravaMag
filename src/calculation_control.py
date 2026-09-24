@@ -74,8 +74,8 @@ class calculation_control:
 class calculation_control_qha(calculation_control):
     def __init__(self, arguments):
         self.compute_magnon_bands = arguments.compute_magnon_bands
-        self.compute_magnon_dos = arguments.compute_magnon_dos
-        self.compute_magnon_thermo = arguments.compute_magnon_thermo
+        self.compute_magnon_dos = True
+        self.compute_magnon_thermo = True
         self.compute_magnon_projected_dos = arguments.compute_magnon_projected_dos
         self.compute_tc = arguments.compute_tc
         self.directory = arguments.directory_name_qha
@@ -115,7 +115,5 @@ class calculation_control_qha(calculation_control):
 
     def run_qha(self):
         self.qha.run_calculation()
-        if not os.path.exists(self.directory + self.res_name):
-            os.makedirs(self.directory + self.res_name)
         write_fe_v(self.res_name,self.qha.V_pho, self.qha.T, self.qha.F_pho)
 
