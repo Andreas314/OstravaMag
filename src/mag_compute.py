@@ -428,7 +428,4 @@ class mag_compute:
             # avoids exp entirely — n already computed, and (n+1) is trivial
             cv_term = x_safe**2 * n * (n + 1.0)
             self.thermo_quant[i, 3] = kB * np.trapz(g * cv_term, dx=dE)
-        N_avo = 6.02214076e23
-        mEv_to_J =  1.60218e-22
-        self.thermo_quant[:, 2:] *= mEv_to_J * N_avo #change units to J/mol
 

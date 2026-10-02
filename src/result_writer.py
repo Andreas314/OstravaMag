@@ -106,27 +106,35 @@ class result_writer:
 
 
     def write_thermo(self):
+       N_avo = 6.02214076e23
+       mEv_to_J =  1.60218e-22
        with open(self.thermo_data, "w") as f:
-               f.write(f"T (K)\tU (meV)\tF (meV)\tS (J/K/mol)\tC (J/K/mol)\n")
+               f.write(f"#T (K)\tU (meV)\tF (meV)\tS (J/K/mol)\tC (J/K/mol)\n")
                for i in range(len(self.comp.interval_T)):
                    output = f"{self.comp.interval_T[i]:9.6f}\t"
-                   for j in range(4):
-                       output += f"{self.comp.thermo_quant[i, j]:9.6f}\t"
+                   output += f"{self.comp.thermo_quant[i, 1] * N_avo * mEv_to_J / 1000:9.14f}\t"
+                   for j in range(2):
+                       output += f"{self.comp.thermo_quant[i, j+2]:9.14f}\t"
+                   output += f"{self.comp.thermo_quant[i, 0] * N_avo * mEv_to_J / 1000:9.14f}\t"
                    output += "\n"
                    f.write(output)
        fig, axes = plt.subplots(2, 2, figsize=(10, 8))
        fig.suptitle("Magnon Thermodynamic Quantities", fontsize=14)
        
        plots = [
-           (0, 0, r"U (meV)",                        "Internal Energy",  0),
-           (0, 1, r"F (meV)",                        "Free Energy",      1),
+           (0, 0, r"F (kJ$\cdot$mol$^{-1}$)",                        "Free Energy",      1),
            (1, 0, r"S (J$\cdot$K$^{-1}$$\cdot$mol$^{-1}$)",       "Entropy",          2),
            (1, 1, r"$C_V$ (J$\cdot$K$^{-1}$$\cdot$mol$^{-1}$)",   "Heat Capacity",    3),
+           (0, 1, r"E (kJ$\cdot$mol$^{-1}$)",                        "Internal Energy",  0),
        ]
        
        for row, col, ylabel, title, idx in plots:
            ax = axes[row, col]
-           ax.plot(self.comp.interval_T, self.comp.thermo_quant[:, idx])
+           if idx > 1:
+                coeff = N_avo * mEv_to_J
+           else:
+                coeff = N_avo * mEv_to_J / 1000
+           ax.plot(self.comp.interval_T, self.comp.thermo_quant[:, idx] * coeff)
            ax.set_xlabel("T (K)")
            ax.set_ylabel(ylabel)
            ax.set_title(title)
