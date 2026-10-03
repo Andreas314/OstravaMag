@@ -3,7 +3,7 @@ from gpaw.response.heisenberg import get_q0_index
 
 kB = 8.617333252e-5 #meV/K
 
-class tp_compute:
+class tc_compute:
     
     def __init__(self, epsilon, max_it, error_min):
         self.epsilon = epsilon * kB
@@ -78,8 +78,8 @@ class tp_compute:
         self.Tc_rpa = norm_last / kB
 
     def print_results(self):
-        print(r"MFA: Tc=", self.Tc_mfa, "K")
-        print(r"RPA: Tc=", self.Tc_rpa, "K")
+        print(f"MFA: Tc= {self.Tc_mfa:4.2f} K")
+        print(f"RPA: Tc= {self.Tc_rpa:4.2f} K")
         print("RPA finished with", self.iterations, "iterations and error of",self.error)
 
 

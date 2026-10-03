@@ -8,6 +8,7 @@ class result_writer:
         self.comp = comp
         self.bands_plot = self.comp.dir + "/magnon_bands.png" 
         self.bands_data = self.comp.dir + "/magnon_bands.dat"
+        self.bands_data_tics = self.comp.dir + "/magnon_bands_tics.dat"
         self.tdos_plot = self.comp.dir + "/magnon_tdos.png"
         self.tdos_data = self.comp.dir + "/magnon_tdos.dat"
         self.pdos_plot = self.comp.dir + "/magnon_pdos.png"
@@ -26,7 +27,7 @@ class result_writer:
         for pos in self.comp.letters_position:
             plt.axvline(x = pos, color = "grey", lw = 0.2)
         for band in range(self.comp.magnon_energies.shape[1]):
-            plt.plot(self.comp.kpath_x, np.real(self.comp.magnon_energies[:, band]))
+            plt.plot(self.comp.kpath_x, np.real(self.comp.magnon_energies[:, band]), "r")
         plt.gca().set_ylim(bottom=0)
         plt.savefig(self.bands_plot, dpi=300)
         plt.clf()
@@ -36,6 +37,9 @@ class result_writer:
                     if (self.comp.magnon_energies[i, band] > 0 and np.imag(self.comp.magnon_energies[i, band]) < 1e-3):
                         f.write(f"{k:8.5f}" + "\t" + f"{np.real(self.comp.magnon_energies[i, band]):8.4f}"+"\n")
                 f.write("\n")
+        with open(self.bands_data_tics, "w") as f:
+            for i in range(len(self.comp.letters)):
+                f.write(self.comp.letters[i] + " " + str(self.comp.letters_position[i]) + "\n")
 
 
     def write_tdos(self):

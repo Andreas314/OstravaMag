@@ -2,7 +2,7 @@
 from src.mag_compute import mag_compute
 from src.result_writer import result_writer
 from src.qha_compute import qha_compute
-from src.tp_compute import tp_compute
+from src.tc_compute import tc_compute
 from src.interfaces.interface_phonopy import load_fe_v, write_fe_v
 import os
 import numpy as np
@@ -19,7 +19,7 @@ class calculation_control:
         self.comp = mag_compute(arguments)
         self.comp.set_up()
         self.writer = result_writer(self.comp)
-        self.tc = tp_compute(arguments.epsilon, arguments.max_it, arguments.tol)
+        self.tc = tc_compute(arguments.epsilon, arguments.max_it, arguments.tol)
         data_type = arguments.type
         self.special = data_type in specials
     
