@@ -12,7 +12,7 @@ def OstravaMag():
     else:
         handle_comp = calculation_control_qha(arguments)
         num = handle_comp.make_directories_list()
-        handle_comp.read_phonopy_data()
+        handle_comp.read_files()
         for i in range(num):
             current = handle_comp.advance()
             handle_comp.read_data()

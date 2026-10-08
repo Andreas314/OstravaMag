@@ -77,12 +77,15 @@ class calculation_control_qha(calculation_control):
         self.compute_magnon_dos = True
         self.compute_magnon_thermo = True
         self.compute_magnon_projected_dos = arguments.compute_magnon_projected_dos
+        self.phonopy = arguments.phonopy
         self.compute_tc = arguments.compute_tc
         self.directory = arguments.directory_name_qha
         self.comp = mag_compute(arguments)
         data_type = arguments.type
         self.special = data_type in specials
-        self.res_name = self.directory + "/fe-v-OstravaMag.dat"
+        self.res_name_phonopy = self.directory + "/fe-v-OstravaMag.dat"
+        self.res_name = "OstravaMag_results_qha"
+        self.T = np.linspace(0, arguments.max_T, arguments.num_T) 
 
     def make_directories_list(self):
         self.subdirs = []
@@ -93,9 +96,16 @@ class calculation_control_qha(calculation_control):
                 self.subdirs.append(os.path.join(self.directory, item))
         return len(self.subdirs)
     
-    def read_phonopy_data(self):
+    def read_files(self):
+        if self.phonopy:
+            self._read_phonopy_data()
+        else:
+            self.qha = qha_compute(len(self.subdirs), [], self.T, [], 0)
+        self._read_tot_energies()
+    
+    def _read_phonopy_data(self):
         V, T, F = load_fe_v(self.directory + "/fe-v.dat")
-        self.qha = qha_compute(len(self.subdirs), V, T, F)
+        self.qha = qha_compute(len(self.subdirs), V, T, F, len(self.comp.magmoms))
         self.comp.max_T = max(T)
         self.comp.num_T = len(T)
         self.comp.interval_T = T
@@ -112,8 +122,16 @@ class calculation_control_qha(calculation_control):
        self.qha.add_energy(self.comp.thermo_quant[:, 1])
        V = self.comp.compute_volume()
        self.qha.add_volume(V)
-
+    
     def run_qha(self):
         self.qha.run_calculation()
-        write_fe_v(self.res_name,self.qha.V_pho, self.qha.T, self.qha.F_pho)
+        self.qha.write_results(self.directory + "/" + self.res_name)
+        if self.phonopy:
+            self.qha.run_interface()
+            write_fe_v(self.res_name_phonopy,self.qha.V_pho, self.qha.T, self.qha.F_pho)
+
+    def _read_tot_energies(self):
+        self.comp.data_name = self.directory
+        self.comp.set_up()
+        self.qha.add_tot_energies(self.comp.reader.read_qha_energies())
 
