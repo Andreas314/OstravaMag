@@ -60,11 +60,15 @@ def write_J_OpenMX(location, structure, output, mag_elem):
     inside_block = 0
     block_type = 0
     lattice = np.zeros(shape=(3,3))
+    units_switch = True
     with open(location + "/" + structure + ".out", "r") as f:
         for line in f:
             word = line.strip().split()
             if word == []:
                 continue
+            if word[0] == "Atoms.SpeciesAndCoordinates.Unit":
+                if word[1].lower() == "ang":
+                    units_switch = False
             if not inside_block:
                 if word[0] == open_block_0:
                     inside_block = 1
@@ -100,7 +104,8 @@ def write_J_OpenMX(location, structure, output, mag_elem):
                             lattice[counter_1][i] = float(word[i])
                         counter_1 += 1
     for i in range(bumber):
-            positions[i] = np.matmul(np.transpose(lattice), positions[i])
+            if units_switch:
+                positions[i] = np.matmul(np.transpose(lattice), positions[i])
     js = []
     open_js = "-------------------------------------------------------------------------------------------------"
     inside_js = 0
@@ -111,6 +116,7 @@ def write_J_OpenMX(location, structure, output, mag_elem):
                 continue
             if word[0] == "Elapsed":
                 break
+
             if not inside_js:
                 if word[0] == open_js:
                     inside_js = 1
