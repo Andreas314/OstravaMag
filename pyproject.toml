@@ -16,6 +16,7 @@ dependencies = [
 
 [project.scripts]
 OstravaMag = "src.OstravaMag:OstravaMag"
+OstravaMag_PrepareInput = "src.OstravaMag_PrepareInput:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
