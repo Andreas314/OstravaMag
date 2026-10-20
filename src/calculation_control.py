@@ -33,7 +33,7 @@ class calculation_control:
         if self.compute_tc:
             if not self.compute_magnon_dos and not self.special:
                 self.comp.make_grid()
-                self.comp.make_fourier_transform("grid")
+            self.comp.make_fourier_transform("grid")
             self.tc.set_exchange(self.comp.Jq, self.comp.magmoms, self.comp.k_grid)
             self.tc.calculate()
             self.tc.print_results()

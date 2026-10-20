@@ -12,8 +12,9 @@ class tc_compute:
 
     def set_exchange(self, Jq, magmoms, k_grid):
         #Equation A3 shows that we do not need to transform the elements of Jq
-        self.Jq = Jq / 2
-
+        S = np.linalg.norm(magmoms, axis = 1)
+        unit_vectors = np.dot(np.diag(1/S), magmoms)
+        self.Jq = Jq / 2 *  np.inner(unit_vectors, unit_vectors)
         self.k_grid = k_grid
         self.q0 = get_q0_index(self.k_grid)
         self.Nq = np.shape(self.k_grid)[0]

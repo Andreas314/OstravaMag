@@ -188,8 +188,8 @@ class mag_compute:
             Nq = np.shape(self.k_grid)[0]
         J0 = self.Jq[q0]
         Na = len(J0)
-        n = np.sign(self.magmoms[:, 2])
-        S = np.abs(self.magmoms[:, 2])
+        S = np.linalg.norm(self.magmoms, axis = 1)
+        unit_vectors = np.dot(np.diag(1/S), self.magmoms)
     
         def KroneckerDelta(i,j):
             if i == j:
@@ -207,19 +207,19 @@ class mag_compute:
         sJ0 = np.zeros((Na), complex)
         for a in range(Na):
             for b in range(Na):
-                sJ0[a] += J0[a,b] 
+                sJ0[a] += J0[a,b] * np.dot(unit_vectors[a], unit_vectors[b])
     
         Aq = np.zeros((Nq, Na, Na), complex)
         for iq in range(Nq):
             for a in range(Na):
                 for b in range(Na):
-                        Aq[iq, a, b] += 2 * ((KroneckerDelta(a,b) * sJ0[a] / S[a]) 
-                              - (KroneckerDelta(n[a],n[b]) * self.Jq[iq,a,b] / np.sqrt(S[a] * S[b])))
+                    Aq[iq, a, b] += 2 * ((KroneckerDelta(a,b) * sJ0[a] / S[a]) 
+                              - ((1 + np.dot(unit_vectors[a], unit_vectors[b])) / 2 * self.Jq[iq,a,b] / np.sqrt(S[a] * S[b])))
         Bq = np.zeros((Nq, Na, Na), complex)
         for iq in range(Nq):
             for a in range(Na):
                 for b in range(Na):
-                        Bq[iq, a, b] -= 2* (KroneckerDelta(n[a],-n[b]) * self.Jq[iq,a,b] / np.sqrt(S[a] * S[b]))
+                        Bq[iq, a, b] -= 2* ((1 - np.dot(unit_vectors[a], unit_vectors[b])) / 2 * self.Jq[iq,a,b] / np.sqrt(S[a] * S[b]))
         Hq = np.zeros((Nq, 2 * Na, 2 * Na), complex)
         for iq in range(Nq):
             for a in range(2 * Na):
@@ -231,7 +231,7 @@ class mag_compute:
                     elif a >= Na and b < Na:
                         Hq[iq,a,b] += np.conj(Bq[iq,b,a - Na])
                     else:
-                        Hq[iq,a,b] += np.conj(Aq[iq,b - Na,a - Na])
+                        Hq[iq,a,b] += (Aq[iq,b - Na,a - Na])
             Hq[iq,:,:] = np.dot(Sz,Hq[iq,:,:])
         E_qn, v_qan = np.linalg.eig(Hq)
         self.magnon_energies = np.zeros((Nq, 2 * Na),complex)
