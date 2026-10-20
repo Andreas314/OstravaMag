@@ -2,6 +2,71 @@
 import numpy as np
 import sys
 
+def write_J_KKR(location, structure, output, Jr, max_R, lattice, mag_elem):
+    positions = []
+    labels = []
+    cartesian_switch = False
+    scale = np.array([1, 1, 1])
+    lattice_constant = 1
+    a = 1
+    with open(location + "/" + structure + ".pot", "r") as f:
+        for line in f:
+            if line.lower().startswith("alat"):
+                lattice_constant = float(line.strip().split()[1]) * 0.529178 
+            if line.lower().startswith("sites"):
+                while True:
+                    line = next(f)
+                    if not line.split() or line.startswith("*"):
+                        break
+                    else:
+                        words = line.strip().split()
+                        if words[0].lower() == "cartesian":
+                            if words[1] == "T":
+                                cartesian_switch = True
+                            continue
+                        if words[0].lower() == "basscale":
+                            for ii in range(3):
+                                scale[ii] = float(words[ii + 1])
+                            continue
+                        if words[0].lower() == "iq":
+                            continue
+                        if cartesian_switch:
+                            a = lattice_constant
+                        if int(words[0])-1 in mag_elem:
+                            coords = [0] * 3
+                            for ii in range(3):
+                                coords[ii] = float(words[1 + ii]) * scale[ii] * a
+                            positions.append(np.array(coords))
+                            labels.append(words[0])
+    N = len(positions)
+    positions = np.array(positions)
+    if not cartesian_switch:
+        for i in range(len(positions)):
+            positions[i] = np.matmul((lattice), positions[i])
+    js = []
+    for ii in range(N):
+        for jj in range(N):
+            for Rx in range(-max_R[0], max_R[0] + 1):
+                for Ry in range(-max_R[1], max_R[1] + 1):
+                    for Rz in range(-max_R[2], max_R[2] + 1):
+                        new_line = [0]*5
+                        J_iso = Jr[Rx + max_R[0], Ry + max_R[1], Rz + max_R[2], ii, jj] * 1000
+                        R = (Rx, Ry, Rz)
+                        distance_cell = np.matmul(np.transpose(lattice), R)
+                        new_line[0] = labels[ii]
+                        new_line[1] = labels[jj]
+                        new_line[2] = J_iso
+                        new_line[4] = R
+                        distance_cell = np.matmul(np.transpose(lattice), R)
+                        distance_atom = positions[jj] - positions[ii]
+                        distance = (distance_cell + distance_atom)
+                        new_line[3] = np.linalg.norm(distance)
+                        if new_line[3] != 0:
+                            js.append(new_line)
+    js.sort(key=lambda x: x[3])
+    final_write(output, lattice, N, labels, positions, js)
+
+
 def write_J_GPAW(location, structure, output, Jr, max_R, lattice, mag_elem):
     positions = []
     labels = []
