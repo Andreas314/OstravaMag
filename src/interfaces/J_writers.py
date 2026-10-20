@@ -2,7 +2,7 @@
 import numpy as np
 import sys
 
-def write_J_KKR(location, structure, output, Jr, max_R, lattice, mag_elem):
+def write_J_KKR(location, structure, output, Jr, max_R, lattice, mag_elem, moments):
     positions = []
     labels = []
     cartesian_switch = False
@@ -55,7 +55,7 @@ def write_J_KKR(location, structure, output, Jr, max_R, lattice, mag_elem):
                         distance_cell = np.matmul(np.transpose(lattice), R)
                         new_line[0] = labels[ii]
                         new_line[1] = labels[jj]
-                        new_line[2] = J_iso
+                        new_line[2] = J_iso * moments[ii] * moments[jj]
                         new_line[4] = R
                         distance_cell = np.matmul(np.transpose(lattice), R)
                         distance_atom = positions[jj] - positions[ii]
@@ -98,7 +98,7 @@ def write_J_GPAW(location, structure, output, Jr, max_R, lattice, mag_elem):
                         distance_cell = np.matmul(np.transpose(lattice), R)
                         new_line[0] = labels[ii]
                         new_line[1] = labels[jj]
-                        new_line[2] = J_iso
+                        new_line[2] = J_iso / 2
                         new_line[4] = R
                         distance_cell = np.matmul(np.transpose(lattice), R)
                         distance_atom = positions[jj] - positions[ii]
@@ -110,7 +110,7 @@ def write_J_GPAW(location, structure, output, Jr, max_R, lattice, mag_elem):
     final_write(output, lattice, N, labels, positions, js)
 
 
-def write_J_OpenMX(location, structure, output, mag_elem):
+def write_J_OpenMX(location, structure, output, mag_elem, moments):
     #read the positions of the atoms inside the cell + lattice vectors    
     open_block_0 = "<Atoms.SpeciesAndCoordinates"
     close_block_0 = "Atoms.SpeciesAndCoordinates>"
@@ -197,7 +197,7 @@ def write_J_OpenMX(location, structure, output, mag_elem):
                     continue
                 new_line[0] = labels[i]
                 new_line[1] = labels[j]
-                new_line[2] = float(word[5])
+                new_line[2] = float(word[5]) * moments[i] * moments[j]
                 for ii in range(3):
                     R[ii] = int(word[ii + 2])
                 new_line[4] = (R[0], R[1], R[2])

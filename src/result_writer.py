@@ -102,11 +102,11 @@ class result_writer:
 
     def write_J(self):
         if self.comp.data_type == "OpenMX":
-            write_J_OpenMX(self.comp.data_name, self.comp.structure_name, self.J_data, self.comp.mag_elem_map)
+            write_J_OpenMX(self.comp.data_name, self.comp.structure_name, self.J_data, self.comp.mag_elem_map, self.comp.magmoms)
         elif self.comp.data_type == "GPAW":
             write_J_GPAW(self.comp.data_name, self.comp.structure_name, self.J_data, self.comp.Jr, self.comp.max_R, self.comp.cell, self.comp.mag_elem_map)
         elif self.comp.data_type == "KKR":
-            write_J_KKR(self.comp.data_name, self.comp.structure_name, self.J_data, self.comp.Jr, self.comp.max_R, self.comp.cell, self.comp.mag_elem_map)
+            write_J_KKR(self.comp.data_name, self.comp.structure_name, self.J_data, self.comp.Jr, self.comp.max_R, self.comp.cell, self.comp.mag_elem_map, self.comp.magmoms)
         else:
             pass
 
