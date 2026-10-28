@@ -55,7 +55,7 @@ def write_J_KKR(location, structure, output, Jr, max_R, lattice, mag_elem, momen
                         distance_cell = np.matmul(np.transpose(lattice), R)
                         new_line[0] = labels[ii]
                         new_line[1] = labels[jj]
-                        new_line[2] = J_iso * moments[ii] * moments[jj]
+                        new_line[2] = J_iso * np.dot(moments[ii], moments[jj]) / np.linalg.norm(moments[ii]) / np.linalg.norm(moments[jj]) / 2
                         new_line[4] = R
                         distance_cell = np.matmul(np.transpose(lattice), R)
                         distance_atom = positions[jj] - positions[ii]
@@ -197,10 +197,13 @@ def write_J_OpenMX(location, structure, output, mag_elem, moments):
                     continue
                 new_line[0] = labels[i]
                 new_line[1] = labels[j]
-                new_line[2] = float(word[5]) * moments[i] * moments[j]
+                moment1 = moments[np.where(mag_elem == i)[0]][0]
+                moment2 = moments[np.where(mag_elem == j)[0]][0]
+                new_line[2] = float(word[5]) * (np.dot(moment1, moment2)
+                    / np.linalg.norm(moment1) / np.linalg.norm(moment2))
                 for ii in range(3):
                     R[ii] = int(word[ii + 2])
-                new_line[4] = (R[0], R[1], R[2])
+                new_line[4] = (int(R[0]), int(R[1]), int(R[2]))
                 distance_cell = np.matmul(np.transpose(lattice), R)
                 distance_atom = positions[j] - positions[i]
                 distance = (distance_cell + distance_atom)
