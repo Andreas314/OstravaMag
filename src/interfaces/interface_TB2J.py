@@ -4,6 +4,7 @@ import os
 from src.interfaces.common import find_non_mag
 
 def read_TB2J(data_name, max_R, to_exclude):
+    spin_idx = lambda atom: is_computed[atom]
     print("Reading data from: " + data_name + "/TB2J.pickle")
     with open(data_name + "/TB2J.pickle", 'rb') as file:
         data = pickle.load(file)
@@ -27,11 +28,13 @@ def read_TB2J(data_name, max_R, to_exclude):
                 for J_1 in range(J_size):
                     for J_2 in range(J_size):
                         J_x = magnetic_atoms[J_1]
+                        J_x = spin_idx(J_x)
                         J_y = magnetic_atoms[J_2]
+                        J_y = spin_idx(J_y)
                         key = ((R_x, R_y, R_z), J_x, J_y)
                         index = get_index(R_x, R_y, R_z, max_R)
                         if key in data['exchange_Jdict'].keys():
-                            result[index[0], index[1], index[2], J_1, J_2] = 2 * data['exchange_Jdict'][key] #* np.sign(moments[J_1, 2]) * np.sign(moments[J_2, 2])
+                            result[index[0], index[1], index[2], J_1, J_2] = 2 * data['exchange_Jdict'][key]
     if warning:
         print("Warning: Some values were not found, those are replaced by 0.")
     return result, cell, moments, magnetic_atoms

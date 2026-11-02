@@ -36,7 +36,6 @@ class calculation_control:
             self.comp.make_fourier_transform("grid")
             self.tc.set_exchange(self.comp.Jq, self.comp.magmoms, self.comp.k_grid)
             self.tc.calculate()
-            self.tc.print_results()
 
     def _run_dos_calc(self):
         if self.compute_magnon_dos:

@@ -114,6 +114,14 @@ class result_writer:
     def write_thermo(self):
        N_avo = 6.02214076e23
        mEv_to_J =  1.60218e-22
+       plt.rcParams.update({
+    "font.size": 16,          # base size
+    "axes.labelsize": 18,     # axis labels
+    "axes.titlesize": 18,     # titles
+    "xtick.labelsize": 16,    # x tick labels
+    "ytick.labelsize": 16,    # y tick labels
+    "legend.fontsize": 14,    # legend
+        })
        with open(self.thermo_data, "w") as f:
                f.write(f"#T (K)\tU (meV)\tF (meV)\tS (J/K/mol)\tC (J/K/mol)\n")
                for i in range(len(self.comp.interval_T)):
@@ -125,7 +133,7 @@ class result_writer:
                    output += "\n"
                    f.write(output)
        fig, axes = plt.subplots(2, 2, figsize=(10, 8))
-       fig.suptitle("Magnon Thermodynamic Quantities", fontsize=14)
+       #fig.suptitle("Magnon Thermodynamic Quantities", fontsize=14)
        
        plots = [
            (0, 0, r"F (kJ$\cdot$mol$^{-1}$)",                        "Free Energy",      1),
