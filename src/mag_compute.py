@@ -231,7 +231,7 @@ class mag_compute:
                     elif a >= Na and b < Na:
                         Hq[iq,a,b] += np.conj(Bq[iq,b,a - Na])
                     else:
-                        Hq[iq,a,b] += (Aq[iq,b - Na,a - Na])
+                        Hq[iq,a,b] += np.conj(Aq[iq,b - Na,a - Na])
             Hq[iq,:,:] = np.dot(Sz,Hq[iq,:,:])
         E_qn, v_qan = np.linalg.eig(Hq)
         self.magnon_energies = np.zeros((Nq, 2 * Na),complex)
