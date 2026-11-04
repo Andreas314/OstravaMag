@@ -39,7 +39,7 @@ Following options turn on a certain type of calculation, they require no input.
     Turns on the interface with the qha of phonopy. If this option is on, the --max_T and --num_T options are disregarded and the temperature grid of the input file is used.
 ## Managing calculations
 - --k_grid  
-    Takes three integers as an input. Sets number of points of the k-grid in each direction.
+    Takes three integers as an input. Sets number of points of the k-grid in each direction (used for dos and RPA calculations).
 - --smearing  
     Size of the Gaussian smearing used to calculate dos (in meV).
 - --max_T  
