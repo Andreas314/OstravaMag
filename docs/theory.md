@@ -105,6 +105,7 @@ N_{\alpha\alpha'}(\boldsymbol{q})=\delta_{\alpha\alpha'}\sum_\gamma J(\boldsymbo
 $$
 We then solve a self-consistent problem, where we start with $\tilde{\boldsymbol{s}_\gamma^i}$ set to the result of MFA and it is updated based on an equation given by
 $$
-(\tilde{\boldsymbol{s}_\alpha^i})_{new}=\frac{2(S_A+1)}{3S_A}\left(\frac{1}{\Omega}\int\text{d}\boldsymbol{q}(N_{old}(\boldsymbol{q}))_{\alpha\alpha}^{-1}\right)^{-1} .
+(\tilde{\boldsymbol{s}_\alpha^i})_{new}=\frac{2(S_\alpha+1)}{3S_\alpha}\left(\frac{1}{\Omega}\int\text{d}\boldsymbol{q}(N_{old}(\boldsymbol{q}))_{\alpha\alpha}^{-1}\right)^{-1} .
 $$
-This iterative scheme is then run as long as two iteration differ by more than given tolerance. $T_c^{RPA}$ is given by the size of $\tilde{\boldsymbol{s}_\gamma^i}$ in the last iteration.
+This iterative scheme is then run as long as two iteration differ by more than given tolerance. $T_c^{RPA}$ is given by the size of $\tilde{\boldsymbol{s}_\gamma^i}$ in the last iteration.  
+**Note:** Sometimes, the prefactor $\frac{S_\alpha + 1}{S_\alpha}$ must be omitted to obtain correct results. Both of those version are output from the code.
