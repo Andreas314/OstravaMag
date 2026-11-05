@@ -70,3 +70,7 @@ To plot the band structure, a definition of the kpath must be given. For Ostrava
 0 0 0 $\Gamma$
 ```
 This file defines a $X\rightarrow\Gamma|L\rightarrow \Gamma$ path for an fcc lattice with 20 points on each segment. The first line contains number of points on each segment. Each subsequent pair of lines contains the starting and finishing point of the segment. Each line contains relative coordinates of a high-symmetry point and label at the end of the line. Blank lines are allowed anywhere. To use greek letters in the plots, use labels as indicated in the example. 
+
+## QHA
+### Magnon contributions alone
+First, let us describe how to obtain the magnon contributions to the Gibbs free energy and constants-pressure heat capacity.
