@@ -20,7 +20,7 @@ which means that they already contain the dot product of the unit spin vectors. 
 
 &emsp; Other conventions employed may differ in the global minus sign or use unnormalized spin vectors and the exchange constants must be rescaled accordingly.
 ## Magnon dispersion
-To calculate the dispersion, we first take the Fourier transformation of the exchange constants in the real space
+To calculate the dispersion we use the Linear Spin-Wave Theory [5],where we first take the Fourier transformation of the exchange constants in the real space
 $$
 J_{ij}(\boldsymbol{k})=\sum_{\boldsymbol{\delta}}J_{ij}(\boldsymbol{\delta})e^{i\boldsymbol{\delta}\cdot\boldsymbol{k}}.
 $$
@@ -89,8 +89,8 @@ The heat capacity at constant pressure is found as
 $$
 C_p(T)=\frac{1}{T}\frac{\partial^2 G(T, p)}{\partial T^2}.
 $$ 
-## $T_c$ calculations 
-To approximate the critical temperature of a given system, two approximation are employed: Mean-Field Approximation (MFA) and Random Phase Approximation (RPA).  
+## Calculations of $T_c$ 
+To approximate the critical temperature of a given system, two approximation are employed: Mean-Field Approximation (MFA) and Random Phase Approximation (RPA). The implementation was done according to Ref [6]  
 &emsp; To get $T_c$ in MFA, the eigenvalues $\beta_c^i$ and eigenvectors $\boldsymbol{s}_\alpha^i$ of the following system are found
 $$
 \sum_\gamma J_{\alpha\gamma}(\boldsymbol{0})\boldsymbol{s}^i_{\alpha} = \beta_c^i\frac{S_\alpha}{(1+S_\alpha)}\boldsymbol{s}^i_{\alpha},

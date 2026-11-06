@@ -16,7 +16,7 @@ rm -rf OstravaMag
 which erases the files along with the environment and the installation.
 ## Preparation of the input files
 Iron is a classical example for calculations of the exchange constants. To obtain the structure and $J_{ij}$, follow the tutorial provided by OpenMX (we are interested in the **bulk** part of the tutorial):  
-<https://www.openmx-square.org/openmx_man3.9/node125.html> 
+<https://www.openmx-square.org/openmx_man3.9/node125.html>   
 To capture the output of *jx*, please run the calculations of the exchange constants on $n$ processors as follows
 ```
 mpirun -np n ./jx Fe_Bulk_jx.scfout Fe_Bulk_jx.config > jx.out
