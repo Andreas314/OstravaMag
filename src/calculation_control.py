@@ -78,8 +78,10 @@ class calculation_control_qha(calculation_control):
         self.compute_magnon_projected_dos = arguments.compute_magnon_projected_dos
         self.phonopy = arguments.phonopy
         self.compute_tc = arguments.compute_tc
+        self.tc = tc_compute(arguments.epsilon, arguments.max_it, arguments.tol)
         self.directory = arguments.directory_name_qha
         self.comp = mag_compute(arguments)
+        self.n_cells = arguments.n_cells
         data_type = arguments.type
         self.special = data_type in specials
         self.res_name_phonopy = self.directory + "/fe-v-OstravaMag.dat"
@@ -99,12 +101,12 @@ class calculation_control_qha(calculation_control):
         if self.phonopy:
             self._read_phonopy_data()
         else:
-            self.qha = qha_compute(len(self.subdirs), [], self.T, [], 0)
+            self.qha = qha_compute(len(self.subdirs), [], self.T, [], self.n_cells)
         self._read_tot_energies()
     
     def _read_phonopy_data(self):
         V, T, F = load_fe_v(self.directory + "/fe-v.dat")
-        self.qha = qha_compute(len(self.subdirs), V, T, F, len(self.comp.magmoms))
+        self.qha = qha_compute(len(self.subdirs), V, T, F, self.n_cells)
         self.comp.max_T = max(T)
         self.comp.num_T = len(T)
         self.comp.interval_T = T
@@ -118,9 +120,12 @@ class calculation_control_qha(calculation_control):
        return current_dir
     
     def add_entries(self):
-       self.qha.add_energy(self.comp.thermo_quant[:, 1])
-       V = self.comp.compute_volume()
-       self.qha.add_volume(V)
+        if self.qha.N == -1:
+            self.qha.N = len(self.comp.magmoms)
+        elif self.qha.N != len(self.comp.magmoms):
+            raise RuntimeError("Different number of magnetic elements in the files!")
+        self.qha.add_energy(self.comp.thermo_quant[:, 1])
+        self.qha.add_volume(self.comp.compute_volume())
     
     def run_qha(self):
         self.qha.run_calculation()

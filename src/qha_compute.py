@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import CubicSpline
 class qha_compute:
     
-    def __init__(self, num_V, V_pho, T_pho, F_pho, N):
+    def __init__(self, num_V, V_pho, T_pho, F_pho, n_cells):
         self.V_pho = V_pho
         self.F_pho = F_pho
         self.T = T_pho
@@ -16,7 +16,8 @@ class qha_compute:
         self.F_tot = np.zeros(shape = (num_T, num_V))
         self.V_0 = np.zeros(shape = (num_T)) 
         self.G = np.zeros(shape = (num_T))
-        self.N = N
+        self.N = -1
+        self.n_cells = n_cells
 
     def add_energy(self, energy):
         energy = energy - energy[0]
@@ -24,7 +25,7 @@ class qha_compute:
         self.counter_F += 1
 
     def add_volume(self, volume):
-        self.V[self.counter_V] = volume
+        self.V[self.counter_V] = volume / self.n_cells
         self.counter_V += 1
 
     def add_tot_energies(self, energies):
@@ -33,7 +34,7 @@ class qha_compute:
         self.U = np.array(energies)
 
     def run_interface(self):
-        self._sort_phonpy_arrays()
+        self._sort_phonopy_arrays()
         num_T = len(self.T)
         to_plot = [0, int(num_T / 4), int(num_T / 2), int(3 * num_T / 4), num_T -1]
         tol = np.mean(np.diff(self.V)) / 50
@@ -44,7 +45,7 @@ class qha_compute:
             self.F_pho = self.F_pho[:, mask]
         for i, T in enumerate(self.T):
             spline = CubicSpline(self.V, self.F[i, :])
-            values = spline(self.V_pho) * self.N
+            values = spline(self.V_pho) * self.N / self.n_cells
             self.F_pho[i, :] += values
     
     def run_calculation(self):
@@ -54,7 +55,7 @@ class qha_compute:
         self._compute_cp()
 
     def _sum_contributions(self):
-        self.F_tot = self.F + self.U
+        self.F_tot = self.F * self.N + self.U
 
     def _find_minima(self):
         V_array = np.linspace(min(self.V), max(self.V), 1000)
@@ -96,12 +97,12 @@ class qha_compute:
                 # pick the one with the lowest free energy
                 best = min(minima_in, key=poly)
                 self.V_0[i] = best
-                self.G[i] = poly(best)
+                self.G[i] = poly(best) / self.N / self.n_cells
             elif minima:
                 print(f"WARNING: minimum at T = {self.T[i]} lies outside the "
                       f"volume range ({minima[0]:.4f} not in [{V_lo:.4f}, {V_hi:.4f}])")
                 self.V_0[i] = minima[0]
-                self.G[i] = poly(minima[0])
+                self.G[i] = poly(minima[0]) / self.N / self.n_cells
             else:
                 print(f"WARNING: No minimum at T = {self.T[i]}")
                 self.V_0[i] = np.nan

@@ -43,7 +43,7 @@ class mag_compute:
         self.Jq = np.array([]) #Js in reciprocal space for kpath
         self.reciprocal = np.array([]) #basis of the reciprocal sapce
         self.k_grid = np.array([]) #actual full gdrid
-        self.weights = np.array([]) #weights of the kpoints in the GPAW calculation
+        #self.weights = np.array([]) #weights of the kpoints in the GPAW calculation
         ##
 
         self.magnon_energies = np.array([]) #magnon bands
@@ -271,7 +271,7 @@ class mag_compute:
                     print(f"WARNING: {sum(imag)} entries with non-zero imaginary component out of {len(E_vals)} in branch {real_branch}")
                 real_branch += 1
                 E_vals = E_vals[~imag]
-                E_vals = E_vals[E_vals > 1e-2]
+                E_vals = E_vals[E_vals > self.smearing]
                 for i, E0 in enumerate(self.dos_E):
                     self.partial_magnon_dos[branch][i] = np.sum(
                         np.exp(-(E_vals  - E0)**2 / (2 * self.smearing**2))
