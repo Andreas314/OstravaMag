@@ -39,18 +39,13 @@ B^{\dagger}(\mathbf{k})&A^T(-\mathbf{k})\end{pmatrix},
 $$
 are $N\times N$ matrices. The submatrices $A$ and $B$ have the following form
 $$
-A_{\alpha\beta}(\mathbf{k})={}
+A_{\alpha\beta}(\boldsymbol{k})={}
 \frac{2\delta_{\alpha\beta}}{M_\alpha}\sum_\gamma
-
 \boldsymbol{e}_\alpha\cdot \boldsymbol{e}_\gamma
-
  J_{\alpha\gamma}(\mathbf{0})
-
 -\frac{2J_{\alpha\beta}(\mathbf{k})}{\sqrt{M_\alpha M_\beta}}
-
 \frac{(1+\boldsymbol{e}_\alpha\cdot \boldsymbol{e}_\beta)}{2},\\
-
-B_{\alpha\beta}(\mathbf{k})={}-
+B_{\alpha\beta}(\boldsymbol{k})={}-
 \frac{2J_{\alpha\beta}(\mathbf{k})}{\sqrt{M_\alpha M_\beta}}
 \frac{(1-\boldsymbol{e}_\alpha\cdot \boldsymbol{e}_\beta)}{2},
 $$
@@ -79,11 +74,11 @@ $$
 ## Quasi-harmonic approximation
 In the qha, it is necessary to first calculate the free energy as written above for multiple volumes to obtain $F(T, V)$ and to know the total energy of the system for each volume $E_{tot}(V)$. Gibbs free energy for given pressure $p$ is than found as
 $$
-G(T, p)=\min_V{(F(T, V) + E_{tot}(V)+ pV)}.
+G(T, p)=\min_V{(F(T, V) - F(0, V)+ E_{tot}(V)+ pV)}.
 $$
 The equilibrium volume for given pressure and temperature can be obtained in a similar manner
 $$
-V_0(T, p)=\argmin_V{(F(T, V) + E_{tot}(V)+ pV)}.
+V_0(T,p) = \operatorname*{arg\,min}_{V}\; \left( F(V,T) - F_0(V, T)+ E_{tot}(V) + pV \right)
 $$
 The heat capacity at constant pressure is found as
 $$

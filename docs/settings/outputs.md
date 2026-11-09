@@ -19,5 +19,7 @@ In this section, we provide a short overview of the output files and their conte
     Contains the lattice vectors, the positions of the atoms in the unit cells and the exchange constants in the TB2J conventions sorted according to the distance between two sites. 
 - fe-v-OstravaMag.dat  
     Contains data from the input fe-v.dat phonopy file to which free energy contribution of magnons was added.
+- qha_results.dat
+    Contains results of the qha calculations ($V_0$, $C_p$ and $G$). The quantities are output per formula unit similarly to phonopy output.
 
 The results of the calculations of the critical temperature are written into the standard input along with the information about the convergence of the RPA algorithm. 

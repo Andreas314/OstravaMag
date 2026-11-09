@@ -1,7 +1,7 @@
 # Input files
 This section offers a manual on how to prepare the input files before running the code. OstravaMag has four interfaces-TB2J, jx, SPR-KKR and GPAW-each of them requires different kind of files to be able to load the necessary parameters. Additionally, one can create a TB2J style input from the first few known exchange constants through a simple input text file. Finally, the k-path must be specified in an external text file.  
 
-**Important Note:** When "input directory" is referred, the directory  given by the "--directory_name" argument is meant. Similarly, when files are labeled by a name containing "*", the name given by the "--root_name" argument should be substituted into the filename. 
+**Important Note:** When "input directory" is referred, the directory  given by the "--directory_name" argument is meant. Similarly, when files are labeled by a name containing "\*", the name given by the "--root_name" argument should be substituted into the filename. 
 ## TB2J interface
 Aside from human readable files and plots, TB2J also outputs a Python readable file *TB2J.pickle*. This file contains all the necessary data to run the magnon calculation. It cannot be renamed and must be placed in the input directory.  
 &emsp;Although not thoroughly tested (yet). When TB2J option is used, the magnetic moments are read as vectors, the calculation for non-collinear structures should be possible and preliminary results seem to be working well.  
@@ -9,7 +9,7 @@ Aside from human readable files and plots, TB2J also outputs a Python readable f
 For more information about **TB2J**, please refer to:  
 <https://tb2j.readthedocs.io/en/latest/index.html>
 ## OpenMX's jx interface
-To run the calculation based on OpenMX's DFT calculations and jx's calculations of the exchange constants, two input files must be placed in the input directory. The structural information is read from the file, which contains the results of the DFT calculations and should be called *.out. The jx code writes the exchange constants into the standard output. This should be captured in a file called *jx.out*, which is then read by the interface scripts.
+To run the calculation based on OpenMX's DFT calculations and jx's calculations of the exchange constants, two input files must be placed in the input directory. The structural information is read from the file, which contains the results of the DFT calculations and should be called *\*.out*. The jx code writes the exchange constants into the standard output. This should be captured in a file called *jx.out*, which is then read by the interface scripts.
 
 **Note:** This interface yet employs no symmetry for OpenMX, all the used pairs must therefore be calculated using jx or a custom script must be used.
 
@@ -18,13 +18,13 @@ Only version 3.9 of OpenMX was tested. For more information, please refer to:
 Specifically for the jx section:  
 <https://www.openmx-square.org/openmx_man3.9/node119.html>
 ## SPR-KKR interface
-The structural information for SPR-KKR is read from the *.pot potential file. The exchange constants are written in the *_JXC_XCPLTEN_Jij.dat file, which contains all the exchanges.
+The structural information for SPR-KKR is read from the *\*.pot* potential file. The exchange constants are written in the *\*_JXC_XCPLTEN_Jij.dat* file, which contains all the exchanges.
 
 For more information, please refer to the **SPR-KKR** manual:  
 <https://www.sprkkr.org/manual/>
 
 ## GPAW interface
-In the case of GPAW, $J_{ij}$ are output directly in reciprocal space. The exchange constants and a list of points on which they are calculated should be saved in a file called j_*.npy and q_*.npy. The structure is read from the output, that GPAW writes to the standard input. It should be contained in a file called *.txt.  
+In the case of GPAW, $J_{ij}$ are output directly in reciprocal space. The exchange constants and a list of points on which they are calculated should be saved in a file called *j_\*.npy* and *q_\*.npy*. The structure is read from the output, that GPAW writes to the standard input. It should be contained in a file called *\*.txt*.  
 &emsp; This interface takes advantage of the fact that $J_{ij}(\boldsymbol{k})=J_{ij}^*(\boldsymbol{-k})$. Therefore, the exchange constants should only be calculated for k-points with a non-negative $z$ coordinate (upper part of the Brillouin zone).
 
 **Note:** Here, is is hard to identify, for which sites in the unit cells the exchange constants were calculated. So in case there are atoms which were not included in the calculations of the exchange constants, it is necessary to exclude them explicitly using the "--exclude_elements" keyword.
@@ -59,7 +59,7 @@ between the sites followed by the exchange constant (in meV).
 
 **Note:** One limitation of this script is when there are two $J_{ij}$ with different values but the same distance. In this case, one might try breaking this symmetry by varying the lattice vectors/atomic positions slightly.
 
-## kpath file
+## Kpath file
 To plot the band structure, a definition of the kpath must be given. For OstravaMag, it is written in an external file, which position and name is given by the "--kpath_name" argument. An example of this file could look like this
 ```txt
 20
@@ -72,5 +72,12 @@ To plot the band structure, a definition of the kpath must be given. For Ostrava
 This file defines a $X\rightarrow\Gamma|L\rightarrow \Gamma$ path for an fcc lattice with 20 points on each segment. The first line contains number of points on each segment. Each subsequent pair of lines contains the starting and finishing point of the segment. Each line contains relative coordinates of a high-symmetry point and label at the end of the line. Blank lines are allowed anywhere. To use greek letters in the plots, use labels as indicated in the example. 
 
 ## QHA
-### Magnon contributions alone
-First, let us describe how to obtain the magnon contributions to the Gibbs free energy and constants-pressure heat capacity.
+In this section, we will show, what files are needed to run the qha calculations.  
+&emsp; For all qha calculations, exchange constants for multiple volumes are needed. Those should be put in multiple folders in a separate directory, which is set using the "--directory_name_qha" keyword. No other folders can be in this directory. Moreover, a file called *OstravaMag_qha.txt* needs to be included here, which contains **only** the total energies for each volumes (from the DFT calculations, or *e-v.dat* file of phonopy). The energies should be sorted with respect to volumes in ascending order.  
+&emsp; To be able to add the magnon contributions to the electron free energy and DFT total energies in the *fe-v.dat* files of phonopy, just put the *fe-v.dat* file in the qha directory. It must be called that way for OstravaMag to be able to read it. Alle the files needed just for the magnon calculations are needed as well.  
+&emsp; One important thing to note here is that the temperature grid used in *fe-v.dat* is also used by the code, when the phonopy interface is used. What's more, the e-v.dat file is not required, so the volumes used in phonopy calculations muse be listed in the header like this
+```
+# volume: 26.12582883 26.39797288 26.67011693 ...
+```
+For more information on qha, please refer to the phonopy's documentation:  
+<https://phonopy.github.io/phonopy/qha.html>

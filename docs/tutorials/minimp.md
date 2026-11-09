@@ -40,7 +40,8 @@ We see that the first two shell distances are in agreement to the ones we want t
 OstravaMag --directory_name NiO_tutorial/ --kpath_name NiO_tutorial/kpath.txt --compute_magnon_bands
 ```
 If everything went right, the result should look something like this
-    ![Fe_dos_bad](/figures/nio_bands.png)
+
+![NiO_bands](./figures/nio_bands.png) 
 Which can is comparable to Figure 2 from Ref [8].
 ## Néel temperature calculations
 The critical temperature can be simply calculated running the following command

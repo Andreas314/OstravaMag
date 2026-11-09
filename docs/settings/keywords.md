@@ -54,3 +54,5 @@ Following options turn on a certain type of calculation, they require no input.
     Tolerance of the RPA algorithm, which is used as a stopping criterion.
 - --max_it  
     Maximum number of iterations of the RPA algorithm.
+- --n_cells  
+    Number of unit cells in the supercell used. It is necessary to specify during the **qha** calculations to obtain the correct scaling of the results.
