@@ -44,6 +44,7 @@ We can now run the calculation with the following command:
 OstravaMag --directory_name Fe_tutorial --type OpenMX --root_name Fe_Bulk_jx --compute_magnon_bands --kpath_name Fe_tutorial/kpath.txt --max_R 2 2 2
 ```
 This creates a directory called *OstravaMag_results_OpenMX* which contains the results. If everything went right, the band structure should be visualized in $magnon_bands.png$ and look like this
+
 ![Fe_bands](./figures/fe_bands.png)
 One can crosscheck the results with tose obtained by the TB2J magnon code:  
 <https://tb2j.readthedocs.io/en/latest/src/magnon_band.html>  
