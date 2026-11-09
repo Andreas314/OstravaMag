@@ -1,0 +1,12 @@
+lattice
+    4.1700      2.0850      2.0850
+    2.0850      4.1700      2.0850
+    2.0850      2.0850      4.1700
+
+atoms fractional                      # symbol  x y z   mx my mz  (mu_B)
+    Ni  0.00  0.00  0.00     0  0   2
+    Ni  0.50  0.50  0.50     0  0   -2
+
+exchange                              # distance [A]   J [eV]
+    2.95   0.7                   # J1  (Ni-Ni nearest neighbour, 1.4 meV)
+    4.1700   -9.5                    # J2  (Ni-O-Ni next-nearest, -19 meV)
