@@ -97,12 +97,12 @@ class qha_compute:
                 # pick the one with the lowest free energy
                 best = min(minima_in, key=poly)
                 self.V_0[i] = best
-                self.G[i] = poly(best) / self.N / self.n_cells
+                self.G[i] = poly(best) / self.n_cells
             elif minima:
                 print(f"WARNING: minimum at T = {self.T[i]} lies outside the "
                       f"volume range ({minima[0]:.4f} not in [{V_lo:.4f}, {V_hi:.4f}])")
                 self.V_0[i] = minima[0]
-                self.G[i] = poly(minima[0]) / self.N / self.n_cells
+                self.G[i] = poly(minima[0])  / self.n_cells
             else:
                 print(f"WARNING: No minimum at T = {self.T[i]}")
                 self.V_0[i] = np.nan
