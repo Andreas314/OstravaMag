@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 from scipy.interpolate import CubicSpline
 class qha_compute:
     
@@ -130,6 +131,8 @@ class qha_compute:
         self.F_pho = self.F_pho[:, idx]
 
     def write_results(self, directory):
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         V_array = np.linspace(min(self.V), max(self.V), 1000)
         quart = int(len(self.T) / 4)
         ind = np.array([0, 1, 2, 3, 4]) * quart
