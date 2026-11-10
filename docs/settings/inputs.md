@@ -73,11 +73,12 @@ This file defines a $X\rightarrow\Gamma|L\rightarrow \Gamma$ path for an fcc lat
 
 ## QHA
 In this section, we will show, what files are needed to run the qha calculations.  
-&emsp; For all qha calculations, exchange constants for multiple volumes are needed. Those should be put in multiple folders in a separate directory, which is set using the "--directory_name_qha" keyword. No other folders can be in this directory. Moreover, a file called *OstravaMag_qha.txt* needs to be included here, which contains **only** the total energies for each volumes (from the DFT calculations, or *e-v.dat* file of phonopy). The energies should be sorted with respect to volumes in ascending order.  
+&emsp; For all qha calculations, exchange constants for multiple volumes are needed. Those should be put in multiple folders in a separate directory, which is set using the "--directory_name_qha" keyword. No other folders can be in this directory. Moreover, a file called *OstravaMag_qha.txt* needs to be included here, which contains **only** the total energies (in eV) for each volumes (from the DFT calculations, or *e-v.dat* file of phonopy). The energies should be sorted with respect to volumes in ascending order.  
 &emsp; To be able to add the magnon contributions to the electron free energy and DFT total energies in the *fe-v.dat* files of phonopy, just put the *fe-v.dat* file in the qha directory. It must be called that way for OstravaMag to be able to read it. Alle the files needed just for the magnon calculations are needed as well.  
 &emsp; One important thing to note here is that the temperature grid used in *fe-v.dat* is also used by the code, when the phonopy interface is used. What's more, the e-v.dat file is not required, so the volumes used in phonopy calculations muse be listed in the header like this
 ```
 # volume: 26.12582883 26.39797288 26.67011693 ...
 ```
+The volumes do not have to coincide with the ones used in the calculations of the exchange constants, but only interpolation can be performed, this means that any volumes in the *fe-v.dat* files outside the range are cut off.  
 For more information on qha, please refer to the phonopy's documentation:  
 <https://phonopy.github.io/phonopy/qha.html>

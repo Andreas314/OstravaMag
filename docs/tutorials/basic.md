@@ -41,7 +41,8 @@ We begin by visualizing the band structure along the $\Gamma\rightarrow N\righta
 ```
 We can now run the calculation with the following command:
 ```
-OstravaMag --directory_name Fe_tutorial --type OpenMX --root_name Fe_Bulk_jx --compute_magnon_bands --kpath_name Fe_tutorial/kpath.txt --max_R 2 2 2
+OstravaMag --directory_name Fe_tutorial --type OpenMX --root_name Fe_Bulk_jx \
+--compute_magnon_bands --kpath_name Fe_tutorial/kpath.txt --max_R 2 2 2
 ```
 This creates a directory called *OstravaMag_results_OpenMX* which contains the results. If everything went right, the band structure should be visualized in $magnon_bands.png$ and look like this
 
@@ -52,21 +53,25 @@ If you use the example data, you might also try running the calculation with "--
 ## Density of states
 Now that we see that the dispersion seem to be correct, we can proceed to calculate the dos and related quantities. Keep the files in the original folder and run
 ```
-OstravaMag --directory_name Fe_tutorial --type OpenMX --root_name Fe_Bulk_jx --compute_magnon_dos --k_grid 20 20 20
+OstravaMag --directory_name Fe_tutorial --type OpenMX --root_name Fe_Bulk_jx \
+ --compute_magnon_dos --k_grid 20 20 20
 ```
 This writes additional files into the folder with results. The total density looks like this (normalized to have integral equal to 1, the normalization is printed to standard output and should be equal to number of magnetic atoms in the calculation)
 
 ![Fe_dos_bad](./figures/fe_dos_bad.png)
 We see that it is very spiky, so the default number of energy points and smearing is not sufficient. Run the calculation again raising both quantities and using denser grid
 ```
-OstravaMag --directory_name Fe_tutorial --type OpenMX --root_name Fe_Bulk_jx --compute_magnon_dos --k_grid 30 30 30 --n_points 1000 --smearing 7
+OstravaMag --directory_name Fe_tutorial --type OpenMX --root_name Fe_Bulk_jx \
+ --compute_magnon_dos --k_grid 30 30 30 --n_points 1000 --smearing 7
 ```
 ![Fe_dos_good](./figures/fe_dos_good.png)
 This looks better, the quality can be improved by running the calculations with more k-points, energy points and smaller smearing. In this case, the calculation takes a few second, but could get more demanding on more complex structures.  
 ## Thermodynamic quantities
 The dos now looks reasonable, we would wish to see the free energy, internal energy, entropy and constant-volume heat capacity. Run the following command utilizing the correct setup for dos
 ```
-OstravaMag --directory_name Fe_tutorial --type OpenMX --root_name Fe_Bulk_jx --compute_magnon_dos --k_grid 30 30 30 --compute_magnon_thermo --n_points 1000 --smearing 7 --max_T 5000 --num_T 5001
+OstravaMag --directory_name Fe_tutorial --type OpenMX --root_name Fe_Bulk_jx \
+ --compute_magnon_dos --k_grid 30 30 30 --compute_magnon_thermo --n_points 1000 \
+ --smearing 7 --max_T 5000 --num_T 5001
 ```
 This computed the quantities up to 5000 K with 1 K resolution (5001 points, 0 K points must be counted in). The result should look like this  
 ![Fe_thermo](./figures/fe_thermo.png)

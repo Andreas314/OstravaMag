@@ -39,6 +39,7 @@ pandoc "${FILES[@]}" \
   -V fontsize=11pt \
    -V mainfont="DejaVu Serif" \
   -o "$OUT" \
-  --from markdown-blank_before_header-space_in_atx_header+tex_math_dollars+pipe_tables+implicit_figures
+  --from markdown-blank_before_header-space_in_atx_header+tex_math_dollars+pipe_tables+implicit_figures \
+  -H header.tex
 
 echo "Written: $OUT"
