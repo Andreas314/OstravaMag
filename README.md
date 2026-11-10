@@ -11,8 +11,20 @@ OstravaMag computes magnon band structures, density of states (DOS), and thermod
 - **GPAW**
 - **SPRKKR**
 
-The code solves the LSWT Hamiltonian on a *k*-point grid or along a specified *k*-path and integrates the resulting magnon spectrum to yield thermodynamic observables including internal energy, free energy, entropy, and heat capacity. Also allows to calculate the critical temperature of the system and magnon free energy to phonopy's input for Quasi harmonic approximation calculations.
-
+The code solves the LSWT Hamiltonian on a *k*-point grid or along a specified *k*-path and integrates the resulting magnon spectrum to yield thermodynamic observables including internal energy, free energy, entropy, and heat capacity. Also allows to calculate the critical temperature of the system and magnon free energy to phonopy's input for Quasi harmonic approximation calculations.  
+Download the code with all the examples and install it inside a virtual environment with the following set of commands
+```
+git clone git@github.com:Andreas314/OstravaMag.git
+cd OstravaMag
+python -m venv test-env
+source test-env/bin/activate
+pip install -e .
+```
+The virtual environment must then be turned on upon each usage with
+```
+source test-env/bin/activate
+```
+The whole installation can be easily erased by erasing the directory.
 ## Documentation
 Detailed description can be found in the documentation, which can be compiled to a pdf manual by running 
 ```
