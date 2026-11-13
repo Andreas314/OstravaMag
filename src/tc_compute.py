@@ -5,10 +5,11 @@ kB = 8.617333252e-5 #meV/K
 
 class tc_compute:
     
-    def __init__(self, epsilon, max_it, error_min):
+    def __init__(self, epsilon, max_it, error_min, mixing):
         self.epsilon = epsilon * kB
         self.max_it = max_it
         self.error_min = error_min
+        self.mixing = mixing
 
     def set_exchange(self, Jq, magmoms, k_grid):
         #Equation A3 shows that we do not need to transform the elements of Jq
@@ -26,7 +27,7 @@ class tc_compute:
     def _compute_MFA(self, apply_correction):
         S = np.linalg.norm(self.magmoms, axis=1) / 2
         correction = (S + 1) / S
-        D = np.sqrt(correction)                      # 1D, shape (Na,)
+        D = np.sqrt(correction)                     # 1D, shape (Na,)
         if apply_correction:
             H = D[:, None] * self.J0 * D[None, :]        # (Na, Na)
         else:
@@ -36,8 +37,8 @@ class tc_compute:
         idx = np.argmax(eigvals)
         self.Tc_mfa = eigvals[idx] / kB * 2 / 3
         if apply_correction:
-            v = D * eigvecs[:, idx]                      # back-transform to the eigenvector of diag(c) @ J0
-            v = np.abs(v)                                # signs are already inside J
+            v = correction * eigvecs[:, idx]                      # back-transform to the eigenvector of diag(c) @ J0
+            v = (v)                                # signs are already inside J
         else:
             v = eigvecs[:, idx]                      # back-transform to the eigenvector of diag(c) @ J0
         self.v_mfa = v / np.linalg.norm(v)
@@ -53,7 +54,7 @@ class tc_compute:
             integrant = 1 / N
         return integrant.sum(axis=0) / self.Nq
     
-    def _run_iteration(self, s, apply_correction):
+    def _run_iteration(self, s,  apply_correction):
         eps = self.epsilon
         f_ieps      = self._integral_at_shift(s, 1j*eps)
         f_2ieps     = self._integral_at_shift(s, 2j*eps)
@@ -76,12 +77,15 @@ class tc_compute:
             it = 0
             error = 1
             norm_last = 0
+            mix = self.mixing
             while error > self.error_min and it < self.max_it:
                 it += 1
                 s_new = self._run_iteration(s_old, ii)
                 norm_new = np.linalg.norm(s_new)
-                s_old = s_new / norm_new
-                error = abs(norm_new - norm_last)
+                s_trial = s_new / norm_new
+                s_old = (1 - mix) * s_old + mix * s_trial
+                s_old /= np.linalg.norm(s_old)
+                error = abs(norm_new - norm_last) / kB
                 norm_last = norm_new
             self.error = error
             self.iterations = it

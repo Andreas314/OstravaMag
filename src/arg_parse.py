@@ -25,6 +25,7 @@ def arg_parse():
     #critical temperature
     parser.add_argument('--compute_tc', action = "store_true",  help='Turns on the computation of the critical temperature' )
     parser.add_argument('--epsilon', type = float,  help='The epsilon parameter inside the RPA calculation (default: 0.1 K)', default = 0.1)
+    parser.add_argument('--mixing', type = float,  help='Mixing of the RPA algorithm', default = 1)
     parser.add_argument('--tol', type = float,  help='The minimal error tolerance of the RPA calculation (default: 1e-8)', default = 1e-8)
     parser.add_argument('--max_it', type = int,  help='The maximum number of iterations of the RPA calculation (default: 100)', default = 100)
     arguments = parser.parse_args()
