@@ -19,7 +19,7 @@ class calculation_control:
         self.comp = mag_compute(arguments)
         self.comp.set_up()
         self.writer = result_writer(self.comp)
-        self.tc = tc_compute(arguments.epsilon, arguments.max_it, arguments.tol)
+        self.tc = tc_compute(arguments.epsilon, arguments.max_it, arguments.tol, arguments.mixing)
         data_type = arguments.type
         self.special = data_type in specials
     
@@ -78,7 +78,7 @@ class calculation_control_qha(calculation_control):
         self.compute_magnon_projected_dos = arguments.compute_magnon_projected_dos
         self.phonopy = arguments.phonopy
         self.compute_tc = arguments.compute_tc
-        self.tc = tc_compute(arguments.epsilon, arguments.max_it, arguments.tol)
+        self.tc = tc_compute(arguments.epsilon, arguments.max_it, arguments.tol, arguments.mixing)
         self.directory = arguments.directory_name_qha
         self.comp = mag_compute(arguments)
         self.n_cells = arguments.n_cells
