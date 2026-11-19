@@ -1,19 +1,35 @@
 import numpy as np
+import os
 
-def load_fe_v(filename):
-    volumes = None
-    temperatures = []
-    free_energies = []
-    with open(filename, "r") as f:
+def find_fe_v(directory):
+    return "fe-v.dat" in os.listdir(directory);
+
+def load_e_v(directory):
+    volumes = []
+    energies = []
+    with open(directory + "/e-v.dat", "r") as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
-            # Read the volume header
             if line.startswith("#"):
-                if "volume" in line.lower():
-                    after_colon = line.split(":", 1)[1] if ":" in line else line.lstrip("#")
-                    volumes = np.array([float(x) for x in after_colon.split()])
+                continue
+            parts = line.split()
+            volumes.append(float(parts[0]))
+            energies.append(float(parts[1]))
+    volumes = np.array(volumes)
+    energies = np.array(energies)
+    return volumes, energies
+
+def load_fe_v(directory):
+    temperatures = []
+    free_energies = []
+    with open(directory + "/fe-v.dat", "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith("#"):
                 continue
  
             # Data line: first column is temperature, rest are free energies
@@ -21,18 +37,9 @@ def load_fe_v(filename):
             temperatures.append(float(parts[0]))
             free_energies.append([float(x) for x in parts[1:]])
  
-    if volumes is None:
-        raise ValueError(f"No '# volume:' header line found in {filename}")
- 
     temperatures = np.array(temperatures)
     free_energies = np.array(free_energies)
- 
-    if free_energies.shape[1] != volumes.shape[0]:
-        raise ValueError(
-            f"Number of volume columns in data ({free_energies.shape[1]}) "
-            f"does not match number of volumes in header ({volumes.shape[0]})"
-        )
-    return volumes, temperatures, free_energies
+    return temperatures, free_energies
 
 def write_fe_v(filename, volumes, temperatures, free_energies, fmt="%.8f"):
     volumes = np.asarray(volumes)

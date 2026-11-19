@@ -14,7 +14,6 @@ class qha_compute:
         self.F = np.zeros(shape = (num_T, num_V))
         self.counter_F = 0
         self.counter_V = 0
-        self.F_tot = np.zeros(shape = (num_T, num_V))
         self.V_0 = np.zeros(shape = (num_T)) 
         self.G = np.zeros(shape = (num_T))
         self.N = -1
@@ -30,11 +29,10 @@ class qha_compute:
         self.counter_V += 1
 
     def add_tot_energies(self, energies):
-        if len(energies) != len(self.V):
-            raise RuntimeError("Wrong number of total energies in the OstravaMag_qha.txt file!")
         self.U = np.array(energies)
 
     def run_interface(self):
+        self._sort_arrays()
         self._sort_phonopy_arrays()
         num_T = len(self.T)
         to_plot = [0, int(num_T / 4), int(num_T / 2), int(3 * num_T / 4), num_T -1]
@@ -49,14 +47,29 @@ class qha_compute:
             values = spline(self.V_pho) * self.N / self.n_cells
             self.F_pho[i, :] += values
     
-    def run_calculation(self):
+    def run_calculation(self, phonopy):
         self._sort_arrays()
-        self._sum_contributions()
+        self._sum_contributions(phonopy)
         self._find_minima()
         self._compute_cp()
 
-    def _sum_contributions(self):
-        self.F_tot = self.F * self.N + self.U
+    def _sum_contributions(self, phonopy):
+        if phonopy:
+            self.F_tot = self.F_pho
+        else:
+            tol = np.mean(np.diff(self.V)) / 50
+            mask = np.logical_and(self.V_pho > (min(self.V) - tol), self.V_pho < (max(self.V) + tol))
+            if not all(mask):
+                print("WARNING: Some values of volume are being cut off!")
+                self.V_pho = self.V_pho[mask]
+                self.U = self.U[mask]
+            self.F_tot = np.zeros(shape = (len(self.T), len(self.V_pho)))
+            for i, T in enumerate(self.T):
+                spline = CubicSpline(self.V, self.F[i, :])
+                values = spline(self.V_pho) * self.N / self.n_cells
+                self.F_tot[i, :] = self.U + values
+        self.V = self.V_pho
+
 
     def _find_minima(self):
         V_array = np.linspace(min(self.V), max(self.V), 1000)
@@ -98,12 +111,12 @@ class qha_compute:
                 # pick the one with the lowest free energy
                 best = min(minima_in, key=poly)
                 self.V_0[i] = best
-                self.G[i] = poly(best) / self.n_cells
+                self.G[i] = poly(best)
             elif minima:
                 print(f"WARNING: minimum at T = {self.T[i]} lies outside the "
                       f"volume range ({minima[0]:.4f} not in [{V_lo:.4f}, {V_hi:.4f}])")
                 self.V_0[i] = minima[0]
-                self.G[i] = poly(minima[0])  / self.n_cells
+                self.G[i] = poly(minima[0])
             else:
                 print(f"WARNING: No minimum at T = {self.T[i]}")
                 self.V_0[i] = np.nan

@@ -3,7 +3,7 @@ from src.mag_compute import mag_compute
 from src.result_writer import result_writer
 from src.qha_compute import qha_compute
 from src.tc_compute import tc_compute
-from src.interfaces.interface_phonopy import load_fe_v, write_fe_v
+from src.interfaces.interface_phonopy import load_fe_v, write_fe_v, find_fe_v, load_e_v
 import os
 import numpy as np
 
@@ -98,15 +98,22 @@ class calculation_control_qha(calculation_control):
         return len(self.subdirs)
     
     def read_files(self):
-        if self.phonopy:
-            self._read_phonopy_data()
-        else:
-            self.qha = qha_compute(len(self.subdirs), [], self.T, [], self.n_cells)
-        self._read_tot_energies()
+        self._read_phonopy_data()
     
     def _read_phonopy_data(self):
-        V, T, F = load_fe_v(self.directory + "/fe-v.dat")
+        V, U = load_e_v(self.directory)
+        self.phonopy = find_fe_v(self.directory)
+        if self.phonopy:
+            print("fe-v.dat found, reading temperature field and energies from it")
+            T, F = load_fe_v(self.directory)
+            if len(V) != len(F[0, :]):
+                raise RuntimeError("Different number of entries in fe-v.dat and e-v.dat!")
+        else:
+            print("fe-v.dat not found, reading temperature field from arguments and energies from e-v.dat")
+            T = self.T
+            F = []
         self.qha = qha_compute(len(self.subdirs), V, T, F, self.n_cells)
+        self.qha.add_tot_energies(U)
         self.comp.max_T = max(T)
         self.comp.num_T = len(T)
         self.comp.interval_T = T
@@ -128,14 +135,9 @@ class calculation_control_qha(calculation_control):
         self.qha.add_volume(self.comp.compute_volume())
     
     def run_qha(self):
-        self.qha.run_calculation()
-        self.qha.write_results(self.directory + "/" + self.res_name)
         if self.phonopy:
             self.qha.run_interface()
             write_fe_v(self.res_name_phonopy,self.qha.V_pho, self.qha.T, self.qha.F_pho)
-
-    def _read_tot_energies(self):
-        self.comp.data_name = self.directory
-        self.comp.set_up()
-        self.qha.add_tot_energies(self.comp.reader.read_qha_energies())
+        self.qha.run_calculation(self.phonopy)
+        self.qha.write_results(self.directory + "/" + self.res_name)
 
