@@ -76,7 +76,7 @@ class calculation_control_qha(calculation_control):
         self.compute_magnon_dos = True
         self.compute_magnon_thermo = True
         self.compute_magnon_projected_dos = arguments.compute_magnon_projected_dos
-        self.phonopy = arguments.phonopy
+        self.phonopy = False
         self.compute_tc = arguments.compute_tc
         self.tc = tc_compute(arguments.epsilon, arguments.max_it, arguments.tol, arguments.mixing)
         self.directory = arguments.directory_name_qha

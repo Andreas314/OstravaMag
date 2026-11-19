@@ -20,7 +20,6 @@ def arg_parse():
     #qha
     parser.add_argument('--compute_qha', action = "store_true",  help='Turns on the quasi-harmonic approximation calculations' )
     parser.add_argument('--directory_name_qha', type = str,  help='Name of the directory with the directories for the qha calculations (default: .)', default = ".")
-    parser.add_argument('--phonopy', action = "store_true", help = 'When turned on, reads phonopy\'s fe-v.dat files and adds the magnon contributions to free energy (qha must be turned on)')
     parser.add_argument('--n_cells', type = int,  help='Number of unit cells used in the magnon calculation, used to normalise data in qha (default: 1)', default = 1)
     #critical temperature
     parser.add_argument('--compute_tc', action = "store_true",  help='Turns on the computation of the critical temperature' )
