@@ -14,13 +14,13 @@ OstravaMag --compute_qha --directory_name_qha FeRh_tutorial/ \
 It is important to specify here the number of cells in the supercell (we are using two primitive cells). We also want to use a large number of points in the density of states and a fine k-grid. The results are stored in the _*OstravaMag_results_qha*_ directory. We can check the quality of the fits of the free energy for a few temperatures in the _*qha_fits.png*_ file
   
 
-![Polynomial of the volume dependence of the free energy for multiple temperatures](./figures/ferh_fits.png)
+![Polynomial of the volume dependence of the free energy for multiple temperatures](../figures/ferh_fits.png)
   
 
 We see that, given the range of volumes we have, we have managed to obtain a reasonable fit. The constant-pressure heat capacity should look like this
   
 
-![Constants-pressure heat capacity result from the qha calculations](./figures/ferh_cp.png)
+![Constants-pressure heat capacity result from the qha calculations](../figures/ferh_cp.png)
   
 
 If you wish to see the results without the electronic contributions, just delete the _*fe-v.dat*_ file and re-run the calculations. It is important to set the same temperature range in the command line options

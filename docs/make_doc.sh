@@ -5,7 +5,7 @@ OUT="${1:-manual.pdf}"
 
 # Order: title -> theory -> tutorials (basic to advanced) -> settings reference -> references
 FILES=(
-  title.md
+  index.md
   theory.md
   tutorials/basic.md
   tutorials/minimp.md

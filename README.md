@@ -1,7 +1,6 @@
 # OstravaMag
 
-A linear spin wave theory (LSWT) code for computing magnon properties from first-principles exchange interaction constants.
-
+A linear spin wave theory (LSWT) code for computing magnon properties from first-principles exchange interaction constants.  
 ## Overview
 
 OstravaMag computes magnon band structures, density of states (DOS), and thermodynamic quantities from exchange interaction parameters *J* obtained via:
@@ -26,7 +25,9 @@ source test-env/bin/activate
 ```
 The whole installation can be easily erased by erasing the directory.
 ## Documentation
-Detailed description can be found in the documentation, which can be compiled to a pdf manual by running 
+Detailed description can be found in the documentation, which can be found in :
+<https://ostravamag.readthedocs.io/en/latest/>  
+or compiled to a pdf manual by running 
 ```
 ./make_docs.sh
 ```

@@ -52,7 +52,7 @@ OstravaMag --directory_name Fe_tutorial --type OpenMX --root_name Fe_Bulk_jx \
 This creates a directory called _*OstravaMag_results_OpenMX*_, which contains the results. If everything went well, the band structure should be visualized in $magnon_bands.png$ and should look like this
   
 
-![Resulting band structure of bcc Fe from the OpenMX input](./figures/fe_bands.png)
+![Resulting band structure of bcc Fe from the OpenMX input](../figures/fe_bands.png)
 
 One can cross-check the results with those obtained by the TB2J magnon code:  
 <https://tb2j.readthedocs.io/en/latest/src/magnon_band.html>  
@@ -66,7 +66,7 @@ OstravaMag --directory_name Fe_tutorial --type OpenMX --root_name Fe_Bulk_jx \
 This writes additional files into the results folder. The total density looks like this (normalized so that the integral is equal to 1; the normalization is printed to standard output and should be equal to the number of magnetic atoms in the calculation)
   
 
-![Magnon DOS of bcc Fe for too few points](./figures/fe_dos_bad.png)
+![Magnon DOS of bcc Fe for too few points](../figures/fe_dos_bad.png)
 
 We see that it is very spiky, so the default number of energy points and the default smearing are not sufficient. Run the calculation again, raising both quantities and using a denser grid
 ```
@@ -74,7 +74,7 @@ OstravaMag --directory_name Fe_tutorial --type OpenMX --root_name Fe_Bulk_jx \
 --compute_magnon_dos --k_grid 30 30 30 --n_points 1000 --smearing 7
 ```
 
-![Magnon DOS of bcc Fe with enough points and larger smearing](./figures/fe_dos_good.png)
+![Magnon DOS of bcc Fe with enough points and larger smearing](../figures/fe_dos_good.png)
 
 This looks better; the quality can be improved by running the calculations with more k-points, more energy points and a smaller smearing. In this case, the calculation takes a few seconds, but it could become more demanding for more complex structures.
 ## Thermodynamic quantities
@@ -86,6 +86,6 @@ OstravaMag --directory_name Fe_tutorial --type OpenMX --root_name Fe_Bulk_jx \
 ```
 This computes the quantities up to 5000 K with a 1 K resolution (5001 points; the 0 K point must be counted in). The result should look like this
 
-![Thermodynamic quantities from the calculated DOS](./figures/fe_thermo.png)
+![Thermodynamic quantities from the calculated DOS](../figures/fe_thermo.png)
 
 This result should be quite robust with respect to the setup of the dos calculation. We see that the high-temperature limit of $C_V$ appears at around 4000 K and that $F$, $E$ and $S$ satisfy the thermodynamic relationship.

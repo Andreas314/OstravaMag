@@ -48,7 +48,7 @@ OstravaMag --directory_name NiO_tutorial/ --kpath_name NiO_tutorial/kpath.txt \
 If everything went well, the result should look something like this
   
 
-![Resulting magnon band structure of NiO from the experimental input](./figures/nio_bands.png)
+![Resulting magnon band structure of NiO from the experimental input](../figures/nio_bands.png)
 
 This can be compared with Figure 2 of Ref. [8].
 ## Néel temperature calculations
