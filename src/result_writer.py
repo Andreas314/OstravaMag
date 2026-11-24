@@ -8,7 +8,7 @@ class result_writer:
         self.comp = comp
         self.bands_plot = self.comp.dir + "/magnon_bands.png" 
         self.bands_data = self.comp.dir + "/magnon_bands.dat"
-        self.bands_data_tics = self.comp.dir + "/magnon_bands_tics.dat"
+        self.bands_data_tics = self.comp.dir + "/magnon_bands_ticks.dat"
         self.tdos_plot = self.comp.dir + "/magnon_tdos.png"
         self.tdos_data = self.comp.dir + "/magnon_tdos.dat"
         self.pdos_plot = self.comp.dir + "/magnon_pdos.png"
