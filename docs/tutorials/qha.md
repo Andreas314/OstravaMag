@@ -1,23 +1,31 @@
 # Tutorial #3-FeRh (AFM phase) qha calculation
-In this section, we will show, how to calculate qha with magnon contributions using OstravaMag. As an example, we will use AFM phase of FeRh with a fcc supercell (two times larger than the unit cell) with 2 magnetic atoms.  
-First, make a directory called *FeRh_tutorial* and copy the example  OpenMX calculations into it 
+In this section, we will show how to calculate qha with magnon contributions using OstravaMag. As an example, we will use the AFM phase of FeRh with an fcc cell containing 2 magnetic Fe atoms.
+First, make a directory called _*FeRh_tutorial*_ and copy the example OpenMX calculations into it
 ```
 cp -r examples/QHA/FeRh/AFM/* FeRh_tutorial/
 ```
-This contains calculations of exchange constants on multiple volumes as well as a file called "OstravaMaf_qha.txt" containing the total energies from DFT calculations in the ascending order with respect to volume. With the right naming convention of the folders, this file can be simply obtained from the OpenMX output files with the following command
+This contains calculations of the exchange constants for multiple volumes, as well as a file called "e-v.dat" containing the total energies from DFT calculations with the SCAN functional for multiple volumes that do not exactly correspond to the ones used for the magnon calculations.
+Additionally, there is also a "fe-v.dat" file that contains the electronic free energies added to the total energies. When this file is found by OstravaMag, the magnon contributions are added on top of the electronic contributions, so the resulting qha calculations are carried out using both contributions. Furthermore, a file called "fe-v-OstravaMag.dat" is saved, which can be used as an input to phonopy to run qha with electronic, magnon and phonon contributions.
+To run the calculation, use the following command
 ```
-grep "Utot\." V_*/FeRh.out| tr -s " " | cut -d " " -f 3 | /
-awk '{$1=$1*27.211386245; printf "%.7f\n",$1}' > OstravaMag_qha.txt
+OstravaMag --compute_qha --directory_name_qha FeRh_tutorial/ \
+--n_cells 2 --n_points 2000 --k_grid 25 25 25
 ```
-Important here is that the energies must be in eV and OpenMX outputs them in Hartree. The naming of the folders does not matter, but the total energies must be sorted in the right order. Once we have that, the qha calculations can be rn with the following minimal command
-```
-OstravaMag --compute_qha --directory_name_qha FeRh_tutorial/ --type OpenMX /
---root_name FeRh --n_cells 2 --max_T 1000 --num_T 1001
-```
-It is important to specify here the number of cells in the supercell. The results are stored the *OstravaMag_results_qha* directory. We can check the quality of the fits of the free energy for a few temperatures in the *qha_fits.png* file
+It is important to specify here the number of cells in the supercell (we are using two primitive cells). We also want to use a large number of points in the density of states and a fine k-grid. The results are stored in the _*OstravaMag_results_qha*_ directory. We can check the quality of the fits of the free energy for a few temperatures in the _*qha_fits.png*_ file
+  
 
-![FeRh_fits](./figures/ferh_fits.png)
+![Polynomial of the volume dependence of the free energy for multiple temperatures](./figures/ferh_fits.png)
+  
 
-We see that even with the default dos setting, we obtained a reasonable polynomial fit. The constant-pressure heat capacity should look like this
+We see that, given the range of volumes we have, we have managed to obtain a reasonable fit. The constant-pressure heat capacity should look like this
+  
 
-![FeRh_fits](./figures/ferh_cp.png)
+![Constants-pressure heat capacity result from the qha calculations](./figures/ferh_cp.png)
+  
+
+If you wish to see the results without the electronic contributions, just delete the _*fe-v.dat*_ file and re-run the calculations. It is important to set the same temperature range in the command line options
+```
+OstravaMag --compute_qha --directory_name_qha FeRh_tutorial \
+--n_cells 2 --n_points 2000 --k_grid 25 25 25 \
+--max_T 1000 --num_T 1001
+```
